@@ -1,0 +1,41 @@
+# Dependencias
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# Builds
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vite/
+
+# Entornos
+.env
+.env.local
+.env.*.local
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Cache y temporales
+.cache/
+coverage/
+tmp/
