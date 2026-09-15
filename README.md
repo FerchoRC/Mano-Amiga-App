@@ -1,26 +1,51 @@
-# Manoamiga
+# Mano Amiga App
 
-Monorepo del proyecto.
+Monorepo del proyecto de plataforma comunitaria para puntos de recogida ante emergencias.
 
 ## Estructura
 
-```
-Manoamiga/
-├── frontend/   # Aplicación cliente
-└── backend/    # API / servidor
+```text
+Mano-Amiga-App/
+├── frontend/   # App móvil React Native/Expo
+├── backend/    # API Node.js + PostgreSQL
+├── README.md   # Documentación general
+└── Manual de marca/  # Assets y guía visual de la marca
 ```
 
-## Clonar el proyecto
+## Requisitos
+
+- Node.js 18+
+- npm
+- Docker Desktop (para PostgreSQL)
+
+## Iniciar el backend
 
 ```bash
-git clone <URL-DEL-REPO>
-cd Manoamiga
+cd backend
+cp .env.example .env
+npm install
+npm run dev
 ```
 
-## Subir cambios
+## Iniciar PostgreSQL
 
 ```bash
-git add .
-git commit -m "Descripción del cambio"
-git push
+cd backend
+docker compose up -d
+```
+
+## Iniciar el frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+## Ejecutar ambos a la vez
+
+```bash
+cd Mano-Amiga-App
+npm install
+npm run dev
 ```
