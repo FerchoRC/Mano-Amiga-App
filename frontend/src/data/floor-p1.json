@@ -1,0 +1,36 @@
+{
+  "floor": "P1",
+  "viewBox": [0, 0, 1000, 700],
+  "rooms": [
+    { "id": "taller-a", "name": "Taller A", "points": [[80, 90], [420, 90], [420, 280], [80, 280]] },
+    { "id": "almacen", "name": "Almacén", "points": [[500, 90], [900, 90], [900, 280], [500, 280]] },
+    { "id": "oficinas", "name": "Oficinas", "points": [[80, 360], [420, 360], [420, 620], [80, 620]] },
+    { "id": "pasillo", "name": "Pasillo central", "points": [[420, 250], [580, 250], [580, 430], [420, 430]] }
+  ],
+  "walls": [
+    { "points": [[80, 90], [420, 90], [420, 280], [80, 280], [80, 90]] },
+    { "points": [[500, 90], [900, 90], [900, 280], [500, 280], [500, 90]] },
+    { "points": [[80, 360], [420, 360], [420, 620], [80, 620], [80, 360]] },
+    { "points": [[580, 250], [580, 430], [420, 430], [420, 250]] },
+    { "points": [[500, 90], [500, 280]] },
+    { "points": [[420, 360], [420, 620]] }
+  ],
+  "doors": [
+    { "x": 420, "y": 200, "angle": 0, "width": 20 },
+    { "x": 500, "y": 200, "angle": 0, "width": 20 },
+    { "x": 500, "y": 430, "angle": 90, "width": 20 },
+    { "x": 260, "y": 360, "angle": 90, "width": 20 }
+  ],
+  "routes": [
+    { "id": "r1", "points": [[140, 200], [270, 200], [420, 200], [520, 200], [630, 200], [760, 200]] },
+    { "id": "r2", "points": [[220, 470], [220, 350], [420, 350], [520, 350], [520, 500], [700, 500]] }
+  ],
+  "pois": [
+    { "id": "EXT-P1-01", "type": "extintor", "x": 210, "y": 180, "code": "EXT-P1-01", "status": "optimo", "nextReview": "2027-02-01" },
+    { "id": "EXT-P1-02", "type": "extintor", "x": 680, "y": 180, "code": "EXT-P1-02", "status": "vencer", "nextReview": "2026-10-28" },
+    { "id": "BOT-P1-01", "type": "botiquin", "x": 280, "y": 470, "code": "BOT-P1-01", "status": "optimo", "nextReview": "2027-01-14" },
+    { "id": "SAL-01", "type": "salida", "x": 920, "y": 200, "code": "SAL-01", "status": "optimo", "nextReview": "2026-12-01" },
+    { "id": "SAL-02", "type": "salida", "x": 310, "y": 620, "code": "SAL-02", "status": "optimo", "nextReview": "2026-11-05" },
+    { "id": "ATC-P1-01", "type": "atencion", "x": 610, "y": 520, "code": "ATC-P1-01", "status": "optimo", "nextReview": "2026-12-07" }
+  ]
+}
