@@ -1,0 +1,152 @@
+.dialog {
+  width: calc(100% - 32px);
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.dialog[open] {
+  display: flex;
+  animation: pop 0.22s var(--ease);
+}
+
+.dialog::backdrop {
+  background: rgb(12 29 54 / 0.45);
+  backdrop-filter: blur(2px);
+  animation: fade 0.2s var(--ease);
+}
+
+.sm {
+  max-width: 420px;
+}
+
+.md {
+  max-width: 540px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 24px 0;
+}
+
+.heading {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+}
+
+.title {
+  font-size: 20px;
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin: -6px -8px 0 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--surface-muted);
+  color: var(--navy);
+}
+
+.body {
+  padding: 20px 24px 24px;
+  overflow-y: auto;
+}
+
+.spacer {
+  height: 24px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+/* Hoja inferior en pantallas pequeñas. */
+@media (max-width: 559px) {
+  .dialog {
+    width: 100%;
+    max-width: none;
+    margin: auto 0 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 92dvh;
+  }
+
+  .dialog[open] {
+    animation: sheet 0.28s var(--ease);
+  }
+
+  .header {
+    padding: 20px 20px 0;
+  }
+
+  .body {
+    padding: 16px 20px 20px;
+  }
+
+  .footer {
+    flex-direction: column-reverse;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .footer > * {
+    width: 100%;
+  }
+}
+
+:global(html:has(dialog[open])) {
+  overflow: hidden;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}

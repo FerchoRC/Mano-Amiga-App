@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "backend": "npm --prefix backend run dev",
-    "frontend": "npm --prefix frontend run start",
+    "frontend": "npm --prefix frontend run dev",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\""
   },
   "devDependencies": {

@@ -1,51 +1,69 @@
-# Mano Amiga App
+# ManoAmiga
 
-Monorepo del proyecto de plataforma comunitaria para puntos de recogida ante emergencias.
+Plataforma web para la gestión integral de emergencias en organizaciones: sedes, plan de
+emergencias, brigadas, mapa de evacuación, inventario de equipos, alertas y reportes de
+cumplimiento.
 
 ## Estructura
 
 ```text
 Mano-Amiga-App/
-├── frontend/   # App móvil React Native/Expo
-├── backend/    # API Node.js + PostgreSQL
-├── README.md   # Documentación general
-└── Manual de marca/  # Assets y guía visual de la marca
+├── frontend/   # SPA en React + Vite (web responsive)
+└── backend/    # API en Node.js (Express) + PostgreSQL
 ```
+
+## Historias implementadas
+
+| Historia | Qué incluye |
+| --- | --- |
+| HU-01 Registro de empresa | Registro en dos pasos con NIT validado (dígito de verificación DIAN), aviso de NIT duplicado y alta automática como Administrador |
+| HU-02 Inicio de sesión | Correo y contraseña con mensaje genérico ante credenciales incorrectas, sesión que expira por inactividad con aviso previo y límite de intentos fallidos |
+| HU-03 Usuarios y roles | El administrador crea cuentas con contraseña temporal (o invita por enlace), cambia roles, restablece contraseñas y desactiva con cierre inmediato de sesiones; permisos verificados en cada endpoint |
+| HU-04 Gestión de sedes | Varias sedes por empresa, cada una con su ubicación marcada en un mapa (Leaflet + OpenStreetMap), con búsqueda de direcciones |
+| HU-05 Plan de emergencias | Editor por secciones (riesgos, procedimientos, puntos de encuentro) con autoguardado, plantilla sugerida, estados borrador y aprobado, versiones y registro de quién lo creó y aprobó |
 
 ## Requisitos
 
-- Node.js 18+
-- npm
+- Node.js 20 o superior
 - Docker Desktop (para PostgreSQL)
 
-## Iniciar el backend
+## Puesta en marcha
 
 ```bash
-cd backend
-cp .env.example .env
-npm install
-npm run dev
-```
-
-## Iniciar PostgreSQL
-
-```bash
+# 1. Base de datos
 cd backend
 docker compose up -d
-```
 
-## Iniciar el frontend
+# 2. Backend
+cp .env.example .env
+npm install
+npm run db:migrate     # crea las tablas
+npm run db:seed        # empresa demo con un usuario por rol (opcional)
+npm run dev            # http://localhost:4000
 
-```bash
+# 3. Frontend (en otra terminal)
 cd frontend
 npm install
-npm start
+npm run dev            # http://localhost:5173
 ```
 
-## Ejecutar ambos a la vez
+Para ejecutar ambos a la vez desde la raíz: `npm install && npm run dev`.
+
+### Cuentas de demostración
+
+Después de `npm run db:seed`, todas las cuentas usan la contraseña `ManoAmiga2026`:
+
+| Rol | Correo |
+| --- | --- |
+| Administrador | admin@demo.co |
+| Brigadista | brigadista@demo.co |
+| Empleado | empleado@demo.co |
+
+En desarrollo, la pantalla de inicio de sesión tiene botones para llenarlas.
+
+## Pruebas
 
 ```bash
-cd Mano-Amiga-App
-npm install
-npm run dev
+cd backend
+npm test   # pruebas de integración de HU-01, HU-02 y HU-03 contra PostgreSQL
 ```

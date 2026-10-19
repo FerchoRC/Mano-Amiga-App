@@ -1,0 +1,328 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+
+.hero {
+  display: grid;
+  gap: 8px;
+}
+
+.lead {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.lead strong {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+.primary,
+.secondary {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+@media (min-width: 960px) {
+  .page {
+    gap: 40px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1.75fr) minmax(280px, 1fr);
+    gap: 24px;
+  }
+}
+
+.card {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 559px) {
+  .card {
+    padding: 20px;
+  }
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cardHead p {
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+.progressText {
+  flex: none;
+  font-size: 14px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.progressText strong {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.progress {
+  height: 4px;
+  margin: 20px 0 8px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+  transition: width 0.6s var(--ease);
+}
+
+/* Lista de pasos con línea de tiempo */
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 10px;
+  padding: 18px 0;
+}
+
+.step + .step {
+  border-top: 1px solid var(--border);
+}
+
+.marker {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--navy);
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.done .marker {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+}
+
+.soon .marker {
+  border: 1.5px dashed var(--border-strong);
+  color: var(--text-subtle);
+}
+
+.stepBody {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stepTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.done .stepTitle {
+  color: var(--text-muted);
+}
+
+.soon .stepTitle {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.stepText {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.soonTag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef0f3;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.stepAction {
+  grid-column: 2;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .step {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .stepAction {
+    grid-column: 3;
+  }
+}
+
+/* Vista de brigadista y empleado */
+.roleHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.roleHead p {
+  margin-top: 4px;
+}
+
+.roleIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--navy);
+  color: #fff;
+}
+
+.capacidades {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+
+.capacidades li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15px;
+}
+
+.capacidades svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--green);
+}
+
+.quiet {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface-muted);
+  box-shadow: none;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.quiet svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-subtle);
+}
+
+/* Columna lateral */
+.small {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.facts {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0 0;
+}
+
+.facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.facts div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.facts dt {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.norma {
+  display: flex;
+  gap: 12px;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--blue-50);
+  font-size: 14px;
+  line-height: 1.55;
+  color: #2a4a82;
+}
+
+.norma svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--blue);
+}
+
+.normaTitle {
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: var(--navy);
+}
