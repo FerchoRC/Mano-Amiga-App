@@ -1,0 +1,214 @@
+.header {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.lead {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.form {
+  display: grid;
+  gap: 20px;
+}
+
+.row {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 520px) {
+  .row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.actions > :last-child {
+  flex: 1;
+}
+
+.switch {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 15px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Indicador de pasos del registro */
+.steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 28px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-subtle);
+}
+
+.step::before {
+  content: '';
+  height: 3px;
+  border-radius: 3px;
+  background: var(--border);
+  transition: background-color 0.3s var(--ease);
+}
+
+.stepDone,
+.stepCurrent {
+  color: var(--navy);
+}
+
+.stepDone::before,
+.stepCurrent::before {
+  background: var(--navy);
+}
+
+.stepNumber {
+  font-variant-numeric: tabular-nums;
+  margin-right: 6px;
+  color: var(--text-subtle);
+}
+
+/* Ayuda contextual de la norma bajo el número de empleados */
+.norma {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.norma svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--blue);
+}
+
+.ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green-700);
+}
+
+.adornment {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text-subtle);
+}
+
+.adornmentOk {
+  color: var(--green);
+}
+
+/* Requisitos de la contraseña */
+.rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-subtle);
+  transition: color 0.2s var(--ease);
+}
+
+.ruleOk {
+  color: var(--green-700);
+}
+
+/* Cuentas de demostración (solo en desarrollo) */
+.demo {
+  margin-top: 28px;
+  padding: 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.demoTitle {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.demoList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Invitación */
+.inviteCard {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.inviteIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--navy);
+  color: #fff;
+}
+
+.inviteRole {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.inviteList {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0 0 0 18px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.centered {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+
+/* Formulario centrado dentro de la aplicación (cambiar contraseña) */
+.narrow {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding-top: 8px;
+}

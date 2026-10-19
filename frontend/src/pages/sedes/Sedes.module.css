@@ -1,0 +1,356 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+
+.headerText {
+  display: grid;
+  gap: 8px;
+  max-width: 640px;
+}
+
+@media (max-width: 559px) {
+  .header > a,
+  .header > button {
+    width: 100%;
+  }
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.back:hover {
+  color: var(--navy);
+  text-decoration: none;
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: 64px 0;
+  color: var(--text-subtle);
+  font-size: 20px;
+}
+
+.card {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 559px) {
+  .card {
+    padding: 20px;
+  }
+}
+
+/* Estado vacío */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 56px 24px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+}
+
+.empty p {
+  max-width: 440px;
+}
+
+.empty > a {
+  margin-top: 8px;
+}
+
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--blue-50);
+  color: var(--blue);
+}
+
+/* Lista + mapa */
+.split {
+  display: grid;
+  gap: 20px;
+}
+
+.mapCard {
+  order: -1;
+  height: 260px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 960px) {
+  .split {
+    grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .mapCard {
+    order: 0;
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+    height: min(640px, calc(100dvh - var(--header-h) - 64px));
+  }
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  font-weight: 400;
+  transition:
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease),
+    transform 0.15s var(--ease);
+}
+
+.item:hover,
+.itemActive {
+  text-decoration: none;
+  border-color: #b9c7dc;
+  box-shadow: var(--shadow);
+}
+
+.itemBody {
+  flex: 1;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.itemName {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.itemAddress {
+  max-width: 100%;
+  font-size: 14px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemArrow {
+  flex: none;
+  color: var(--text-subtle);
+  transition: transform 0.15s var(--ease);
+}
+
+.item:hover .itemArrow,
+.itemActive .itemArrow {
+  transform: translateX(2px);
+  color: var(--navy);
+}
+
+/* Formulario de sede */
+.formLayout {
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 960px) {
+  .formLayout {
+    grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.formFields {
+  display: grid;
+  gap: 20px;
+}
+
+.searchRow {
+  display: flex;
+  gap: 8px;
+}
+
+.searchRow > :first-child {
+  flex: 1;
+}
+
+.results {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  list-style: none;
+}
+
+.result {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.result:hover,
+.result:focus-visible {
+  background: var(--surface-muted);
+  box-shadow: none;
+}
+
+.resultLabel {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.resultDetail {
+  font-size: 12px;
+  color: var(--text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pickerWrap {
+  display: grid;
+  gap: 10px;
+}
+
+.picker {
+  height: 320px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.pickerInvalid {
+  border-color: var(--red);
+}
+
+@media (min-width: 960px) {
+  .pickerWrap {
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+  }
+
+  .picker {
+    height: min(560px, calc(100dvh - var(--header-h) - 140px));
+  }
+}
+
+.pickerHint {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.coords {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subtle);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+@media (max-width: 559px) {
+  .formActions {
+    flex-direction: column-reverse;
+  }
+}
+
+/* Detalle de sede */
+.detailLayout {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .detailLayout {
+    grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
+    gap: 24px;
+  }
+}
+
+.side {
+  display: grid;
+  gap: 20px;
+}
+
+.miniMap {
+  height: 220px;
+  border-bottom: 1px solid var(--border);
+}
+
+.locationCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.locationBody {
+  display: grid;
+  gap: 4px;
+  padding: 16px 20px;
+  font-size: 14px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+}

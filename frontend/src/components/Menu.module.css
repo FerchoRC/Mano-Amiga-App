@@ -1,0 +1,75 @@
+.root {
+  position: relative;
+  display: inline-flex;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease);
+}
+
+.trigger:hover,
+.trigger[aria-expanded='true'] {
+  background: rgb(22 50 92 / 0.06);
+  color: var(--navy);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: rise 0.16s var(--ease);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 14px;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.item svg {
+  color: var(--text-subtle);
+}
+
+.item:hover,
+.item:focus-visible {
+  background: var(--surface-muted);
+  box-shadow: none;
+}
+
+.danger,
+.danger svg {
+  color: var(--red-700);
+}
+
+.danger:hover,
+.danger:focus-visible {
+  background: var(--red-50);
+}
