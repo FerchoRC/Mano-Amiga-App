@@ -14,55 +14,6 @@ Es una aplicación web **responsive** que se usa desde el computador o el celula
 
 ---
 
-## Estado del proyecto
-
-El MVP son 13 historias de usuario, gestionadas en el tablero de Trello del equipo.
-
-| Historia | Estado | Entrega |
-| --- | --- | --- |
-| HU-01 Registro de empresa | ✅ Hecha | 16 oct |
-| HU-02 Inicio de sesión | ✅ Hecha | 16 oct |
-| HU-03 Gestión de usuarios y roles | ✅ Hecha | 16 oct |
-| HU-04 Gestión de sedes | ✅ Hecha | 24 oct |
-| HU-05 Crear plan de emergencias | ✅ Hecha | 24 oct |
-| HU-06 Conformar brigadas | Pendiente | 31 oct |
-| HU-07 Mapa de la sede | Pendiente | 31 oct |
-| HU-08 Editar puntos del mapa | Pendiente | 7 nov |
-| HU-09 Enviar alerta de emergencia | Pendiente | 7 nov |
-| HU-10 Confirmar estado en una emergencia | Pendiente | 14 nov |
-| HU-11 Inventario de equipos | Pendiente | 14 nov |
-| HU-12 Reporte para auditoría | Pendiente | 21 nov |
-| HU-13 Panel de cumplimiento | Pendiente | 21 nov |
-
-### Lo que ya funciona
-
-- **Registro de empresa (HU-01):** formulario en dos pasos. El NIT se valida con el dígito de
-  verificación de la DIAN y se avisa si ya está registrado. Quien registra la empresa queda como
-  Administrador. La pantalla también indica lo que exige la Resolución 0312 de 2019 según el número
-  de empleados.
-- **Inicio de sesión (HU-02):** con correo y contraseña. Si falla, el mensaje no revela qué dato
-  estuvo mal. La sesión se cierra tras 15 minutos de inactividad, con un aviso un minuto antes, y hay
-  un límite de intentos fallidos.
-- **Usuarios y roles (HU-03):**
-  - Crear y asignar: el administrador crea cuentas con contraseña temporal, que la persona cambia en
-    su primer ingreso, o invita por enlace. Asigna el rol de Administrador, Brigadista o Empleado.
-  - Gestionar: puede cambiar roles, restablecer contraseñas y desactivar a una persona. Al
-    desactivarla, sus sesiones se cierran de inmediato.
-  - Cambiar la propia contraseña: cualquier usuario puede hacerlo desde su cuenta.
-- **Sedes (HU-04):** una empresa puede tener varias sedes, cada una con su ubicación en el mapa.
-  Se busca la dirección y luego se ajusta el punto exacto con un clic o arrastrando el marcador.
-- **Plan de emergencias (HU-05):**
-  - Contenido: un plan por sede con riesgos identificados, procedimientos paso a paso y puntos de
-    encuentro.
-  - Edición: se trabaja por secciones y se guarda solo. Se puede empezar en blanco o con una
-    plantilla sugerida.
-  - Estados: el plan pasa de *borrador* a *aprobado*. Queda registrado quién lo creó, lo editó y lo
-    aprobó, y cuándo.
-  - Versiones: un plan aprobado no se edita, para conservarlo como evidencia. Para cambiarlo se crea
-    una versión nueva y la anterior queda en el historial.
-
----
-
 ## Tecnologías
 
 | Capa | Tecnología |
@@ -71,7 +22,6 @@ El MVP son 13 historias de usuario, gestionadas en el tablero de Trello del equi
 | Backend | Node.js 20+, Express 5, zod (validación), helmet, express-rate-limit |
 | Base de datos | PostgreSQL 16 (en Docker para desarrollo) |
 | Pruebas | `node:test` + supertest contra PostgreSQL real |
-| Correo (opcional) | Resend |
 
 La identidad gráfica (paleta, tipografías Poppins e Inter y logo) sigue el documento del
 proyecto, sección 08.
@@ -163,34 +113,6 @@ npm run dev
 
 ---
 
-## Datos de demostración
-
-`npm run db:seed` crea (o recrea, si ya existe) la empresa **Textiles del Aburrá S.A.S.** Las demás
-empresas que hayas registrado no se tocan.
-
-Todas las cuentas usan la contraseña `ManoAmiga2026`:
-
-| Rol | Correo | Notas |
-| --- | --- | --- |
-| Administrador | `admin@demo.co` | Ve y gestiona todo |
-| Brigadista | `brigadista@demo.co` | |
-| Empleado | `empleado@demo.co` | |
-| Empleado | `marta@demo.co` | Desactivado: no puede entrar |
-| Brigadista | `julian@demo.co` | Invitación pendiente: el enlace sale en la consola al correr el seed |
-
-En desarrollo, la pantalla de inicio de sesión tiene botones para llenar las tres primeras.
-
-| Sede | Plan de emergencias |
-| --- | --- |
-| Planta Itagüí | Aprobado |
-| Bodega Sabaneta | En borrador |
-| Oficina El Poblado | Sin plan |
-
-Para registrar empresas de prueba usa NITs válidos, por ejemplo `900.123.456-8`, `900.111.222-1`
-o `901.555.444-7`. Cada NIT se puede registrar una sola vez.
-
----
-
 ## Scripts
 
 | Dónde | Comando | Qué hace |
@@ -203,32 +125,6 @@ o `901.555.444-7`. Cada NIT se puede registrar una sola vez.
 | `frontend/` | `npm run dev` | Servidor de desarrollo de Vite |
 | `frontend/` | `npm run build` | Compila para producción en `dist/` |
 | raíz | `npm run dev` | Backend y frontend a la vez |
-
----
-
-## Variables de entorno
-
-**Backend** (`backend/.env`, a partir de `.env.example`):
-
-| Variable | Por defecto | Uso |
-| --- | --- | --- |
-| `PORT` | `4000` | Puerto de la API |
-| `DATABASE_URL` | base local de Docker | Conexión a PostgreSQL |
-| `APP_URL` | `http://localhost:5173` | URL del frontend: enlaces de invitación y CORS |
-| `CORS_ORIGINS` | `APP_URL` | Orígenes permitidos, separados por coma |
-| `SESSION_IDLE_MINUTES` | `15` | Minutos sin actividad antes de cerrar la sesión |
-| `SESSION_MAX_HOURS` | `12` | Duración máxima de una sesión |
-| `INVITATION_DAYS` | `7` | Vigencia de los enlaces de invitación |
-| `RESEND_API_KEY` | vacío | Si se define, las invitaciones salen por correo |
-| `MAIL_FROM` | `ManoAmiga <no-responder@manoamiga.co>` | Remitente de los correos |
-
-**Frontend** (`frontend/.env`, opcional):
-
-| Variable | Uso |
-| --- | --- |
-| `VITE_API_URL` | URL de la API en producción. En desarrollo se deja vacía: Vite redirige `/api` a `localhost:4000` |
-
-`.env` no se sube al repositorio.
 
 ---
 
@@ -296,26 +192,3 @@ Según el documento del proyecto, sección 06:
 
 En producción hay que definir `NODE_ENV=production`, `APP_URL` con la URL pública del frontend y
 `VITE_API_URL` con la de la API.
-
----
-
-## Limitaciones conocidas
-
-- **Búsqueda de direcciones:** las direcciones colombianas con placa ("Calle 50 # 41-20") se ubican
-  de forma aproximada. Por eso el punto se ajusta a mano en el mapa.
-- **Plantilla del plan:** es la misma para todas las sedes, sin importar ciudad ni sector. Debe
-  validarla un profesional SST.
-- **NIT:** solo se aceptan NITs de 9 dígitos (personas jurídicas). Las personas naturales, cuyo NIT
-  es la cédula, aún no pueden registrarse.
-- **Sedes de los usuarios:** las personas pertenecen a la empresa, no a una sede. Para HU-09
-  (alertas a los empleados de una sede) habrá que asignar cada persona a su sede.
-- **Mapas en producción:** OpenStreetMap sirve para desarrollo y poco tráfico. Con muchos clientes
-  conviene un proveedor de mapas.
-
----
-
-## Forma de trabajo
-
-- Historias de usuario en el tablero de Trello: *Product Backlog → En progreso → En revisión →
-  Terminado*.
-- Cada integrante trabaja en su rama y se integra a `main` con pull request.
