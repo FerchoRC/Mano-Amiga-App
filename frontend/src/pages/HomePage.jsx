@@ -19,6 +19,7 @@ function obligacion(numEmpleados) {
 function PrimerosPasos({ empresa }) {
   const [total, setTotal] = useState(null);
   const [sedes, setSedes] = useState(null);
+  const [brigadas, setBrigadas] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -28,6 +29,9 @@ function PrimerosPasos({ empresa }) {
     api('/api/sedes', { signal: controller.signal })
       .then(({ sedes }) => setSedes(sedes))
       .catch(() => {});
+    api('/api/brigadas', { signal: controller.signal })
+      .then(({ brigadas = [] }) => setBrigadas(brigadas))
+      .catch(() => {});
     return () => controller.abort();
   }, []);
 
@@ -35,6 +39,11 @@ function PrimerosPasos({ empresa }) {
   const numSedes = sedes?.length ?? 0;
   const conPlan = sedes?.filter((s) => s.plan.estado === 'aprobado').length ?? 0;
   const planesListos = numSedes > 0 && conPlan === numSedes;
+  const conformadas = sedes?.reduce((totalSedes, sede) => {
+    const hayBrigadas = (brigadas ?? []).some((brigada) => (brigada.sede?.id ?? brigada.sedeId) === sede.id);
+    return totalSedes + (hayBrigadas ? 1 : 0);
+  }, 0);
+  const brigadasListas = numSedes > 0 && conformadas === numSedes;
   const pasos = [
     {
       titulo: 'Registrar la empresa',
@@ -69,8 +78,12 @@ function PrimerosPasos({ empresa }) {
     },
     {
       titulo: 'Conformar las brigadas',
-      detalle: 'Primeros auxilios, evacuación y contra incendios, cada una con su líder.',
-      proximamente: true,
+      detalle:
+        numSedes > 0
+          ? `${conformadas ?? 0} de ${numSedes} ${numSedes === 1 ? 'sede lista' : 'sedes listas'} para responder.`
+          : 'Primeros auxilios, evacuación y contra incendios, cada una con su líder.',
+      hecho: brigadasListas,
+      accion: numSedes > 0 ? { texto: 'Ver brigadas', to: '/brigadas' } : { texto: 'Registrar sede', to: '/sedes/nueva' },
     },
   ];
   const hechos = pasos.filter((p) => p.hecho).length;

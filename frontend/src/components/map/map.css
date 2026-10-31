@@ -67,3 +67,72 @@
 .ma-map .leaflet-tooltip-top::before {
   border-top-color: var(--navy-950);
 }
+
+.ma-poi {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.ma-poi__disc {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgb(12 29 54 / 0.2);
+  transform: translate(4px, 4px);
+}
+
+.ma-poi--green .ma-poi__disc {
+  background: var(--green);
+}
+
+.ma-poi--red .ma-poi__disc {
+  background: var(--red);
+}
+
+.ma-poi--blue .ma-poi__disc {
+  background: var(--blue);
+}
+
+.ma-poi.is-active .ma-poi__disc {
+  transform: scale(1.15) translate(4px, 4px);
+  box-shadow: 0 0 0 4px rgb(47 111 222 / 0.35);
+}
+
+.ma-poi--green.is-active .ma-poi__disc {
+  box-shadow: 0 0 0 4px rgb(46 158 91 / 0.3);
+}
+
+.ma-poi--red.is-active .ma-poi__disc {
+  box-shadow: 0 0 0 4px rgb(215 38 61 / 0.3);
+}
+
+.ma-route-arrow {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 12px solid var(--green-700);
+  filter: drop-shadow(0 2px 2px rgb(12 29 54 / 0.2));
+}
+
+.ma-me {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 0 8px rgb(47 111 222 / 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ma-poi__disc,
+  .ma-poi.is-active .ma-poi__disc {
+    transition: none;
+  }
+}

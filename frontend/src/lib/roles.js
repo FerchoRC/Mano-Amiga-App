@@ -7,6 +7,9 @@ export const PERMISOS = {
   SEDES_GESTIONAR: 'sedes:gestionar',
   PLANES_VER: 'planes:ver',
   PLANES_GESTIONAR: 'planes:gestionar',
+  BRIGADAS_VER: 'brigadas:ver',
+  BRIGADAS_GESTIONAR: 'brigadas:gestionar',
+  MAPA_VER: 'mapa:ver',
 };
 
 // Descripción de cada rol tal como lo entiende el negocio (documento, sección 07).

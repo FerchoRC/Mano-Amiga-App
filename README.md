@@ -136,12 +136,15 @@ puede usar.
 | Puede… | Administrador | Brigadista | Empleado |
 | --- | :---: | :---: | :---: |
 | Ver la empresa, sus sedes y los planes aprobados | ✅ | ✅ | ✅ |
+| Ver brigadas y mapa de la sede | ✅ | ✅ | ✅ |
 | Gestionar usuarios y roles | ✅ | | |
 | Registrar y editar sedes | ✅ | | |
 | Crear, editar y aprobar planes de emergencia | ✅ | | |
+| Crear y editar brigadas | ✅ | | |
 
-Por ahora brigadista y empleado ven lo mismo. Se diferenciarán con HU-06 (brigadas), HU-09
-(enviar alertas) y HU-10 (ver quién está a salvo).
+Por ahora brigadista y empleado ven lo mismo en la empresa, pero ya se diferencian en permisos y
+nuestro foco en HU-06 (brigadas), HU-07 (mapa de evacuación), HU-09 (enviar alertas) y HU-10 (ver
+quién está a salvo).
 
 ---
 

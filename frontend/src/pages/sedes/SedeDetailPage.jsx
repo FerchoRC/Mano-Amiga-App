@@ -285,6 +285,9 @@ export default function SedeDetailPage() {
               <span className={sedeStyles.coords}>
                 {sede.lat.toFixed(5)}, {sede.lng.toFixed(5)}
               </span>
+              <Button variant="secondary" size="sm" to={`/mapa?sede=${id}`}>
+                Ver mapa de evacuación
+              </Button>
             </div>
           </div>
 

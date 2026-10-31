@@ -16,7 +16,9 @@ import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
-// Las pantallas de sedes usan el mapa (Leaflet): se cargan solo cuando se visitan.
+// Las pantallas con mapear usan Leaflet y se cargan solo cuando se visitan.
+const BrigadasPage = lazy(() => import('./pages/brigadas/BrigadasPage.jsx'));
+const MapaPage = lazy(() => import('./pages/mapa/MapaPage.jsx'));
 const PlanEditorPage = lazy(() => import('./pages/sedes/PlanEditorPage.jsx'));
 const SedeDetailPage = lazy(() => import('./pages/sedes/SedeDetailPage.jsx'));
 const SedeFormPage = lazy(() => import('./pages/sedes/SedeFormPage.jsx'));
@@ -75,6 +77,22 @@ export default function App() {
             element={
               <RequirePermission permiso={PERMISOS.PLANES_GESTIONAR}>
                 <PlanEditorPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="/brigadas"
+            element={
+              <RequirePermission permiso={PERMISOS.BRIGADAS_VER}>
+                <BrigadasPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="/mapa"
+            element={
+              <RequirePermission permiso={PERMISOS.MAPA_VER}>
+                <MapaPage />
               </RequirePermission>
             }
           />

@@ -1,4 +1,4 @@
-import { Building2, House, KeyRound, LogOut, Users } from 'lucide-react';
+import { Building2, House, KeyRound, LogOut, Map as MapIcon, ShieldPlus, Users } from 'lucide-react';
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router';
 
@@ -13,6 +13,8 @@ import styles from './AppLayout.module.css';
 const NAV = [
   { to: '/inicio', label: 'Inicio', icon: House },
   { to: '/sedes', label: 'Sedes', icon: Building2, permiso: PERMISOS.SEDES_VER },
+  { to: '/brigadas', label: 'Brigadas', icon: ShieldPlus, permiso: PERMISOS.BRIGADAS_VER },
+  { to: '/mapa', label: 'Mapa', icon: MapIcon, permiso: PERMISOS.MAPA_VER },
   { to: '/equipo', label: 'Equipo', icon: Users, permiso: PERMISOS.USUARIOS_GESTIONAR },
 ];
 

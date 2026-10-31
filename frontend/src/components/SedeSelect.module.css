@@ -1,0 +1,29 @@
+.single {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.single strong {
+  font-size: 18px;
+  color: var(--navy);
+}
+
+.single span:last-child {
+  font-size: 14px;
+}
+
+.selectWrap {
+  max-width: 360px;
+  width: 100%;
+}
+
+@media (max-width: 559px) {
+  .selectWrap {
+    max-width: none;
+  }
+}

@@ -26,7 +26,7 @@ export function crearPin({ activo = false, arrastrable = false } = {}) {
 // Crea un mapa de Leaflet con OpenStreetMap dentro de `containerRef` y lo
 // destruye al desmontar. La rueda del mouse solo hace zoom tras un clic en el
 // mapa, para no atrapar el desplazamiento de la página.
-export function useLeafletMap(containerRef, { center = CENTRO_POR_DEFECTO, zoom = 12 } = {}) {
+export function useLeafletMap(containerRef, { center = CENTRO_POR_DEFECTO, zoom = 12, ...opciones } = {}) {
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -35,6 +35,7 @@ export function useLeafletMap(containerRef, { center = CENTRO_POR_DEFECTO, zoom 
       zoom,
       scrollWheelZoom: false,
       attributionControl: true,
+      ...opciones,
     });
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
