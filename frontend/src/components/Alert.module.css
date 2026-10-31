@@ -1,0 +1,51 @@
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  line-height: 1.5;
+  animation: rise 0.25s var(--ease);
+}
+
+.icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.error {
+  background: var(--red-50);
+  border-color: #f6c8ce;
+  color: #8f1323;
+}
+
+.success {
+  background: var(--green-50);
+  border-color: #bfe3cd;
+  color: #1b5e38;
+}
+
+.info {
+  background: var(--blue-50);
+  border-color: #cfdef8;
+  color: #1c3f80;
+}
+
+.warning {
+  background: var(--orange-50);
+  border-color: #f8d6b3;
+  color: #7f430a;
+}

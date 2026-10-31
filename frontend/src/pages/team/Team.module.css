@@ -1,0 +1,680 @@
+.page {
+  display: grid;
+  /* minmax(0, …) impide que los filtros desplazables ensanchen la página. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+
+.headerText {
+  display: grid;
+  gap: 8px;
+  max-width: 640px;
+}
+
+@media (max-width: 559px) {
+  .header > :last-child {
+    width: 100%;
+  }
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.list .row:last-child {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* Barra de filtros */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  max-width: 100%;
+  border-radius: 10px;
+  background: var(--bg);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.segmented::-webkit-scrollbar {
+  display: none;
+}
+
+.segmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--ease),
+    color 0.15s var(--ease);
+}
+
+.segmented button:hover {
+  color: var(--navy);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--navy);
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.08);
+}
+
+.count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgb(22 50 92 / 0.07);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  line-height: 20px;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+  min-width: min(100%, 320px);
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 300px;
+  color: var(--text-subtle);
+}
+
+.search svg {
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+}
+
+.search input,
+.stateSelect,
+.roleSelect {
+  height: 40px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  font-size: 15px;
+  color: var(--text);
+  transition:
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+
+.search input {
+  width: 100%;
+  padding: 0 12px 0 36px;
+}
+
+.search input:focus,
+.stateSelect:focus,
+.roleSelect:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: var(--focus-ring);
+}
+
+.stateSelect,
+.roleSelect {
+  appearance: none;
+  padding: 0 34px 0 12px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235b6474' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+@media (max-width: 759px) {
+  .toolbar {
+    padding: 12px;
+  }
+
+  /* Los filtros de rol se desplazan; el borde difuminado lo sugiere. */
+  .segmented {
+    width: 100%;
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+
+  .filters {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+
+  .search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .stateSelect {
+    flex: 1;
+  }
+}
+
+/* Lista de personas: tabla en escritorio, tarjetas apiladas en celular */
+.listHead {
+  display: none;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'person actions'
+    'role status';
+  align-items: center;
+  gap: 12px 12px;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  animation: rise 0.25s var(--ease);
+}
+
+.list .row:first-child {
+  border-top: 0;
+}
+
+.rowInactive .personName,
+.rowInactive .personMail {
+  color: var(--text-subtle);
+}
+
+.person {
+  grid-area: person;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.personText {
+  min-width: 0;
+}
+
+.personName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.personMail {
+  font-size: 14px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.youTag {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--blue-50);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--blue-600);
+}
+
+.cellRole {
+  grid-area: role;
+}
+
+.roleSelect {
+  height: 36px;
+  font-size: 14px;
+  min-width: 150px;
+}
+
+.roleSelect:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.roleStatic {
+  display: inline-block;
+  padding-left: 1px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.cellStatus {
+  grid-area: status;
+  justify-self: end;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.subtle {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.cellAccess {
+  display: none;
+}
+
+.cellActions {
+  grid-area: actions;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 36px;
+}
+
+@media (min-width: 860px) {
+  .listHead,
+  .row {
+    grid-template-columns:
+      minmax(0, 2.2fr) minmax(160px, 1fr) minmax(190px, 1fr) minmax(120px, 0.8fr)
+      44px;
+    grid-template-areas: none;
+    column-gap: 20px;
+    padding: 14px 20px;
+  }
+
+  .listHead {
+    display: grid;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+
+  .person,
+  .cellRole,
+  .cellStatus,
+  .cellActions {
+    grid-area: auto;
+  }
+
+  .cellStatus {
+    justify-self: start;
+    justify-items: start;
+  }
+
+  .cellAccess {
+    display: block;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .row:hover {
+    background: #fbfcfd;
+  }
+}
+
+/* Estados de carga y vacío */
+.skeleton {
+  animation: none;
+}
+
+.skelAvatar,
+.skelLine {
+  display: block;
+  background: linear-gradient(90deg, #eef0f3 0%, #f6f7f9 50%, #eef0f3 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+.skelAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.skelLine {
+  width: min(220px, 60%);
+  height: 12px;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  color: var(--text-muted);
+}
+
+/* Leyenda de roles */
+.legend {
+  display: grid;
+  gap: 16px;
+}
+
+.legendTitle {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.legendGrid {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .legendGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+.legendItem {
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.legendName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.legendItem ul {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0 0 0 18px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Diálogo de invitación */
+.inviteForm {
+  display: grid;
+  gap: 18px;
+}
+
+.roles {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rolesLegend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.roleOption {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.15s var(--ease),
+    background-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+
+.roleOption:hover {
+  border-color: #b5bdc9;
+}
+
+.roleOption input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.roleOption:has(input:checked) {
+  border-color: var(--blue);
+  background: var(--blue-50);
+  box-shadow: inset 0 0 0 1px var(--blue);
+}
+
+.roleOption:has(input:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+
+.roleOptionIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--navy);
+}
+
+.roleOption:has(input:checked) .roleOptionIcon {
+  background: var(--blue);
+  color: #fff;
+}
+
+.roleOptionText {
+  display: grid;
+}
+
+.roleOptionName {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.roleOptionDesc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Enlace de invitación */
+.linkBox {
+  display: grid;
+  gap: 16px;
+}
+
+.linkHead {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.linkHead strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.linkIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green-50);
+  color: var(--green);
+}
+
+.linkRow {
+  display: flex;
+  gap: 8px;
+}
+
+.linkInput {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Selector "Crear acceso / Enviar invitación" */
+.modeSwitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.modeSwitch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--ease),
+    color 0.15s var(--ease);
+}
+
+.modeSwitch button:hover {
+  color: var(--navy);
+}
+
+.modeSwitch button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--navy);
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.08);
+}
+
+/* Contraseña asignada por el administrador */
+.passwordBlock {
+  display: grid;
+  gap: 14px;
+}
+
+.passwordInput {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.02em;
+  padding-right: 112px;
+}
+
+.generate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--blue-50);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-600);
+  cursor: pointer;
+}
+
+.generate:hover {
+  background: #e1ebfb;
+}
+
+/* Datos de acceso para entregar */
+.credentials {
+  display: grid;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.credentials div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.credentials div + div {
+  border-top: 1px solid var(--border);
+}
+
+.credentials dt {
+  color: var(--text-muted);
+}
+
+.credentials dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.secret {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  color: var(--navy);
+}

@@ -1,0 +1,177 @@
+.shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  top: 4px;
+  z-index: 20;
+  margin-top: 4px;
+  background: rgb(255 255 255 / 0.92);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 1120px;
+  height: var(--header-h);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.brand {
+  flex: none;
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.company {
+  display: none;
+  min-width: 0;
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav {
+  display: none;
+}
+
+.account {
+  margin-left: auto;
+}
+
+.who {
+  display: none;
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px var(--gutter) calc(96px + env(safe-area-inset-bottom));
+  animation: rise 0.3s var(--ease);
+}
+
+.tabbar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 20;
+  display: flex;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  background: rgb(255 255 255 / 0.96);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+}
+
+.tab {
+  flex: 1;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 0;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-subtle);
+}
+
+.tab:hover {
+  text-decoration: none;
+  color: var(--navy);
+}
+
+.tab:global(.active) {
+  color: var(--blue);
+}
+
+@media (min-width: 760px) {
+  .company {
+    display: block;
+    max-width: 260px;
+  }
+
+  .nav {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    height: 100%;
+    margin-left: 12px;
+  }
+
+  .navLink {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .navLink:hover {
+    text-decoration: none;
+    color: var(--navy);
+  }
+
+  .navLink:global(.active) {
+    color: var(--navy);
+  }
+
+  .navLink:global(.active)::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--navy);
+  }
+
+  .who {
+    display: grid;
+    text-align: right;
+    line-height: 1.25;
+  }
+
+  .whoName {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .whoRole {
+    font-size: 12px;
+    color: var(--text-subtle);
+  }
+
+  .main {
+    padding-top: 44px;
+    padding-bottom: 64px;
+  }
+
+  .tabbar {
+    display: none;
+  }
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: 64px 0;
+  font-size: 20px;
+  color: var(--text-subtle);
+}

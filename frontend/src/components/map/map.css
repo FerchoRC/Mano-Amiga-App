@@ -1,0 +1,69 @@
+/* Estilos globales del mapa: Leaflet crea sus propias clases. */
+.ma-map {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: #e9edf1;
+  font-family: var(--font-body);
+  z-index: 0;
+}
+
+/* Tonos más sobrios que el mapa estándar, para que resalten los marcadores. */
+.ma-map .leaflet-tile-pane {
+  filter: saturate(0.55) contrast(0.96) brightness(1.03);
+}
+
+.ma-map .leaflet-control-attribution {
+  font-size: 10px;
+  background: rgb(255 255 255 / 0.8);
+}
+
+.ma-map .leaflet-bar {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.ma-map .leaflet-bar a {
+  color: var(--navy);
+}
+
+/* Marcador de sede */
+.ma-pin {
+  color: var(--navy);
+  filter: drop-shadow(0 2px 3px rgb(12 29 54 / 0.35));
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+  transform-origin: 50% 100%;
+}
+
+.ma-pin svg {
+  display: block;
+}
+
+.ma-pin.is-active {
+  color: var(--red);
+  transform: scale(1.15);
+  z-index: 1000 !important;
+}
+
+.ma-pin.is-draggable {
+  cursor: grab;
+}
+
+.ma-map .leaflet-tooltip {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--navy-950);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow);
+}
+
+.ma-map .leaflet-tooltip-top::before {
+  border-top-color: var(--navy-950);
+}

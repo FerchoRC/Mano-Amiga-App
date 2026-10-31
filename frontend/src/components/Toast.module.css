@@ -1,0 +1,45 @@
+.region {
+  position: fixed;
+  inset: auto var(--gutter) calc(16px + env(safe-area-inset-bottom));
+  z-index: 200;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+@media (min-width: 760px) {
+  .region {
+    inset: auto 24px 24px auto;
+    justify-items: end;
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 420px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--navy-950);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: var(--shadow-lg);
+  animation: rise 0.25s var(--ease);
+  pointer-events: auto;
+}
+
+.toast svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.success svg {
+  color: #6fd59b;
+}
+
+.error svg {
+  color: #ff8a98;
+}
