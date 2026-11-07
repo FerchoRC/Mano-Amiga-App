@@ -18,9 +18,18 @@ export const PERMISOS = Object.freeze({
   // Ver solo planes aprobados; gestionar incluye borradores y aprobación.
   PLANES_VER: 'planes:ver',
   PLANES_GESTIONAR: 'planes:gestionar',
+  BRIGADAS_VER: 'brigadas:ver',
+  BRIGADAS_GESTIONAR: 'brigadas:gestionar',
+  MAPA_VER: 'mapa:ver',
 });
 
-const LECTURA = [PERMISOS.EMPRESA_VER, PERMISOS.SEDES_VER, PERMISOS.PLANES_VER];
+const LECTURA = [
+  PERMISOS.EMPRESA_VER,
+  PERMISOS.SEDES_VER,
+  PERMISOS.PLANES_VER,
+  PERMISOS.BRIGADAS_VER,
+  PERMISOS.MAPA_VER,
+];
 
 const PERMISOS_POR_ROL = {
   [ROLES.ADMINISTRADOR]: [
@@ -28,6 +37,7 @@ const PERMISOS_POR_ROL = {
     PERMISOS.USUARIOS_GESTIONAR,
     PERMISOS.SEDES_GESTIONAR,
     PERMISOS.PLANES_GESTIONAR,
+    PERMISOS.BRIGADAS_GESTIONAR,
   ],
   [ROLES.BRIGADISTA]: LECTURA,
   [ROLES.EMPLEADO]: LECTURA,

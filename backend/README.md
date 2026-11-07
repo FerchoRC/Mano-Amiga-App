@@ -71,6 +71,26 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 | POST | `/api/sedes/:id/plan/versiones` | Administrador | Abre una versión nueva a partir de la vigente |
 | DELETE | `/api/sedes/:id/plan/borrador` | Administrador | Descarta el borrador |
 
+| GET | `/api/brigadas?sede=` | Sesión | HU-06: brigadas de la empresa (o de una sede) con líder y miembros |
+| GET | `/api/brigadas/:id` | Sesión | Una brigada |
+| POST | `/api/brigadas` | Administrador | Crea una brigada: `sedeId`, `tipo`, `liderId`, `miembrosIds` |
+| PUT | `/api/brigadas/:id` | Administrador | Cambia el líder y los miembros |
+| DELETE | `/api/brigadas/:id` | Administrador | Elimina la brigada |
+| GET | `/api/sedes/:id/mapa` | Sesión | HU-07: puntos (encuentro, extintores, botiquines, camillas) y rutas de evacuación |
+
+### Brigadas
+
+- Tipos: `primeros_auxilios`, `evacuacion` y `contra_incendios`; una brigada por tipo en cada sede.
+- Cada brigada tiene un líder, que debe ser miembro y brigadista activo.
+- Un brigadista puede estar en varias brigadas. Solo se asignan brigadistas activos; quien ya era
+  miembro puede seguir aunque cambie de rol o se desactive, y la tarjeta lo indica.
+
+### Mapa de evacuación
+
+- Se dibuja sobre el mapa real con latitud y longitud (`mapa_punto` y `mapa_ruta`).
+- Las rutas guardan su trazado como `[[lat, lng], …]`; el frontend dibuja flechas en el sentido de evacuación.
+- Por ahora los puntos y rutas se cargan con el seed; agregarlos y editarlos desde la app es HU-08.
+
 ### Plan de emergencias y versiones
 
 - Cada sede tiene un plan (`plan_emergencia`) con versiones numeradas (`plan_version`).

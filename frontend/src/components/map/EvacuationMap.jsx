@@ -1,14 +1,39 @@
 import L from 'leaflet';
 import { useEffect, useRef } from 'react';
 
-import { tipoElemento } from '../../lib/mapa.js';
-import { useLeafletMap } from './leaflet.js';
+import { rumbo } from '../../lib/mapa.js';
+import { crearPin, useLeafletMap } from './leaflet.js';
 import { crearIconoElemento } from './mapIcons.jsx';
 
-function mapaTipo(tipo) {
-  return tipoElemento(tipo)?.tono ?? 'green';
+const ESTILO_RUTA = { color: '#2E9E5B', weight: 5, opacity: 0.9, lineJoin: 'round' };
+const ESTILO_RUTA_ACTIVA = { weight: 8, opacity: 1 };
+
+// Flechas a mitad de cada tramo para indicar hacia dónde evacuar.
+// El triángulo de .ma-route-arrow apunta al este; el rumbo se mide desde el norte.
+function flechasDeRuta(trazado) {
+  const flechas = [];
+  for (let i = 0; i < trazado.length - 1; i++) {
+    const [lat1, lng1] = trazado[i];
+    const [lat2, lng2] = trazado[i + 1];
+    const angulo = rumbo({ lat: lat1, lng: lng1 }, { lat: lat2, lng: lng2 }) - 90;
+    flechas.push(
+      L.marker([(lat1 + lat2) / 2, (lng1 + lng2) / 2], {
+        icon: L.divIcon({
+          className: '',
+          html: `<span class="ma-route-arrow" style="transform: rotate(${angulo}deg)"></span>`,
+          iconSize: [12, 16],
+          iconAnchor: [6, 8],
+        }),
+        interactive: false,
+        keyboard: false,
+      })
+    );
+  }
+  return flechas;
 }
 
+// HU-07: mapa de evacuación de la sede. Cada elemento se dibuja con su ícono
+// (ver la leyenda) y se puede ocultar por tipo con `visibles`.
 export default function EvacuationMap({
   sede,
   puntos = [],
@@ -21,116 +46,102 @@ export default function EvacuationMap({
   const containerRef = useRef(null);
   const mapRef = useLeafletMap(containerRef, {
     center: sede ?? { lat: 6.2442, lng: -75.5812 },
-    zoom: 18,
+    zoom: 17,
     maxZoom: 19,
   });
-  const gruposRef = useRef(new Map());
-  const marcadoresRef = useRef(new Map());
-  const rutasRef = useRef(new Map());
-  const onSelectRef = useRef(onSelect);
+  // id → { tipo, capa, marcador? , linea? }
+  const elementosRef = useRef(new Map());
   const seleccionadoRef = useRef(null);
-
+  const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
+  // Dibujar la sede, los puntos y las rutas, y encuadrarlos.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !sede) return;
 
-    const capas = new Map();
-    const puntosLayer = L.layerGroup().addTo(map);
-    const rutasLayer = L.layerGroup().addTo(map);
-    capas.set('puntos', puntosLayer);
-    capas.set('rutas', rutasLayer);
-    gruposRef.current = capas;
-    marcadoresRef.current = new Map();
-    rutasRef.current = new Map();
+    const capa = L.layerGroup().addTo(map);
+    const elementos = new Map();
+    const limites = L.latLngBounds([[sede.lat, sede.lng]]);
 
-    for (const punto of puntos) {
-      const tipo = punto.tipo ?? 'punto_encuentro';
-      const marcador = L.marker([punto.lat, punto.lng], {
-        icon: crearIconoElemento(tipo),
-        keyboard: true,
-        title: punto.nombre,
-      })
-        .bindTooltip(punto.nombre, { direction: 'top' })
-        .on('click', () => onSelectRef.current?.({ ...punto, tipo: 'punto' }))
-        .addTo(puntosLayer);
-      marcadoresRef.current.set(punto.id, { tipo, marker: marcador });
-    }
+    L.marker([sede.lat, sede.lng], { icon: crearPin(), title: sede.nombre, keyboard: false })
+      .bindTooltip(sede.nombre, { direction: 'top' })
+      .addTo(capa);
 
     for (const ruta of rutas) {
-      const coords = Array.isArray(ruta.trazado) && ruta.trazado.length ? ruta.trazado : [];
-      const polyline = L.polyline(coords, {
-        color: '#2E9E5B',
-        weight: 5,
-        opacity: 0.9,
-        lineJoin: 'round',
-      })
-        .bindTooltip(ruta.nombre, { direction: 'top' })
-        .on('click', () => onSelectRef.current?.({ ...ruta, tipo: 'ruta' }))
-        .addTo(rutasLayer);
-      rutasRef.current.set(ruta.id, polyline);
+      const trazado = Array.isArray(ruta.trazado) ? ruta.trazado : [];
+      if (trazado.length < 2) continue;
+      const linea = L.polyline(trazado, ESTILO_RUTA)
+        .bindTooltip(ruta.nombre, { direction: 'top', sticky: true })
+        .on('click', () => onSelectRef.current?.({ ...ruta, clase: 'ruta' }));
+      const grupo = L.layerGroup([linea, ...flechasDeRuta(trazado)]);
+      elementos.set(ruta.id, { tipo: 'ruta_evacuacion', capa: grupo, linea });
+      trazado.forEach((coord) => limites.extend(coord));
     }
 
-    map.setView([sede.lat, sede.lng], 17);
+    for (const punto of puntos) {
+      const marcador = L.marker([punto.lat, punto.lng], {
+        icon: crearIconoElemento(punto.tipo),
+        keyboard: true,
+        title: punto.nombre,
+        riseOnHover: true,
+      })
+        .bindTooltip(punto.nombre, { direction: 'top' })
+        .on('click', () => onSelectRef.current?.({ ...punto, clase: 'punto' }));
+      elementos.set(punto.id, { tipo: punto.tipo, capa: marcador, marcador });
+      limites.extend([punto.lat, punto.lng]);
+    }
+
+    elementosRef.current = elementos;
+    seleccionadoRef.current = null;
+
+    if (elementos.size) map.fitBounds(limites, { padding: [48, 48], maxZoom: 19 });
+    else map.setView([sede.lat, sede.lng], 17);
 
     return () => {
-      for (const capa of capas.values()) capa.remove();
+      capa.remove();
+      for (const { capa: c } of elementos.values()) c.remove();
     };
   }, [mapRef, puntos, rutas, sede]);
 
+  // Mostrar u ocultar por tipo, según la leyenda.
   useEffect(() => {
-    const visiblesSet = new Set(visibles ?? []);
-    for (const [tipo, capa] of gruposRef.current) {
-      if (tipo === 'puntos') {
-        const cosas = Array.from(marcadoresRef.current.values()).map(({ tipo: itemTipo, marker }) => ({ itemTipo, marker }));
-        cosas.forEach(({ itemTipo, marker }) => {
-          const visible = visiblesSet.has(itemTipo) || itemTipo === 'ruta_evacuacion';
-          if (visible) marker.addTo(capa); else marker.remove();
-        });
-      }
-
-      if (tipo === 'rutas') {
-        const rutasLayer = capa;
-        const todas = Array.from(rutasRef.current.values());
-        todas.forEach((ruta) => {
-          const visible = visiblesSet.has('ruta_evacuacion');
-          if (visible) ruta.addTo(rutasLayer); else ruta.remove();
-        });
-      }
+    const map = mapRef.current;
+    if (!map) return;
+    const activos = new Set(visibles ?? []);
+    for (const { tipo, capa } of elementosRef.current.values()) {
+      if (activos.has(tipo)) capa.addTo(map);
+      else capa.remove();
     }
-  }, [visibles]);
+  }, [mapRef, visibles, puntos, rutas]);
 
+  // Resaltar el elemento elegido en el mapa o en la lista.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    const key = seleccionado && (seleccionado.id ?? seleccionado);
-    const prev = seleccionadoRef.current;
-
-    if (prev && marcadoresRef.current.has(prev)) {
-      const actual = marcadoresRef.current.get(prev);
-      actual.marker.setIcon(crearIconoElemento(actual.tipo));
-      actual.marker.setZIndexOffset(0);
+    const anterior = elementosRef.current.get(seleccionadoRef.current);
+    if (anterior?.marcador) {
+      anterior.marcador.setIcon(crearIconoElemento(anterior.tipo));
+      anterior.marcador.setZIndexOffset(0);
     }
+    if (anterior?.linea) anterior.linea.setStyle(ESTILO_RUTA);
 
-    if (key && marcadoresRef.current.has(key)) {
-      const actual = marcadoresRef.current.get(key);
-      actual.marker.setIcon(crearIconoElemento(actual.tipo, { activo: true }));
-      actual.marker.setZIndexOffset(1000);
-      map.panTo([actual.marker.getLatLng().lat, actual.marker.getLatLng().lng]);
+    const id = seleccionado?.id ?? null;
+    const actual = elementosRef.current.get(id);
+    if (actual?.marcador) {
+      actual.marcador.setIcon(crearIconoElemento(actual.tipo, { activo: true }));
+      actual.marcador.setZIndexOffset(1000);
+      map.panTo(actual.marcador.getLatLng());
     }
-
-    if (key && rutasRef.current.has(key)) {
-      const actual = rutasRef.current.get(key);
-      actual.setStyle({ weight: 7, opacity: 1 });
-      const bounds = L.latLngBounds(actual.getLatLngs());
-      map.fitBounds(bounds, { padding: [24, 24], maxZoom: 18 });
+    if (actual?.linea) {
+      actual.linea.setStyle(ESTILO_RUTA_ACTIVA).bringToFront();
+      map.fitBounds(actual.linea.getBounds(), { padding: [48, 48], maxZoom: 19 });
     }
-
-    seleccionadoRef.current = key;
+    seleccionadoRef.current = id;
   }, [mapRef, seleccionado]);
 
+  // Leaflet necesita recalcular su tamaño si el contenedor cambia (p. ej. al girar el celular).
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;

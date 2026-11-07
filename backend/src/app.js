@@ -6,8 +6,10 @@ import { testDatabaseConnection } from './config/db.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.routes.js';
+import brigadasRoutes from './routes/brigadas.routes.js';
 import empresasRoutes from './routes/empresas.routes.js';
 import invitacionesRoutes from './routes/invitaciones.routes.js';
+import mapaRoutes from './routes/mapa.routes.js';
 import planesRoutes from './routes/planes.routes.js';
 import sedesRoutes from './routes/sedes.routes.js';
 import usuariosRoutes from './routes/usuarios.routes.js';
@@ -15,7 +17,6 @@ import usuariosRoutes from './routes/usuarios.routes.js';
 export function createApp() {
   const app = express();
 
-  // Render y Vercel ponen un proxy delante; así el rate limit ve la IP real.
   if (env.isProduction) app.set('trust proxy', 1);
 
   app.use(helmet());
@@ -37,7 +38,9 @@ export function createApp() {
   app.use('/api/usuarios', usuariosRoutes);
   app.use('/api/invitaciones', invitacionesRoutes);
   app.use('/api/sedes/:idSede/plan', planesRoutes);
+  app.use('/api/sedes/:idSede/mapa', mapaRoutes);
   app.use('/api/sedes', sedesRoutes);
+  app.use('/api/brigadas', brigadasRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

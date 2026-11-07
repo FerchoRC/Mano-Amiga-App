@@ -44,6 +44,8 @@ export default function BrigadasPage() {
   }, [brigadas, sede]);
 
   const conformadas = TIPOS_BRIGADA.filter((tipo) => brigadasSede.some((brigada) => brigada.tipo === tipo.id)).length;
+  // El botón del encabezado abre el primer tipo que aún no existe en la sede.
+  const tipoFaltante = TIPOS_BRIGADA.find((tipo) => !brigadasSede.some((brigada) => brigada.tipo === tipo.id));
 
   const onSave = (brigadaActualizada) => {
     setBrigadas((actual) => {
@@ -72,8 +74,8 @@ export default function BrigadasPage() {
           <h1>Brigadas</h1>
           <p className="muted">Quién responde en cada tipo de emergencia, sede por sede.</p>
         </div>
-        {can(PERMISOS.BRIGADAS_GESTIONAR) && sede && (
-          <Button icon={Plus} onClick={() => setDialog({ sede, tipo: 'primeros_auxilios' })}>
+        {can(PERMISOS.BRIGADAS_GESTIONAR) && sede && tipoFaltante && !cargando && (
+          <Button icon={Plus} onClick={() => setDialog({ sede, tipo: tipoFaltante.id })}>
             Crear brigada
           </Button>
         )}

@@ -169,7 +169,10 @@ export default function BrigadaDialog({ open, onClose, sede, tipo, brigada, brig
                       {usuario.estado !== 'activo' && <small className={styles.metaBadge}>Inactivo</small>}
                       {otras.length > 0 && (
                         <small className={styles.metaMuted}>
-                          También en: {otras.map((item) => `${item.tipo ? item.tipo : 'Brigada'} · ${item.sede?.nombre ?? sede.nombre}`).join(' · ')}
+                          También en:{' '}
+                          {otras
+                            .map((item) => `${tipoBrigada(item.tipo)?.etiqueta ?? 'Brigada'} (${item.sede?.nombre ?? sede.nombre})`)
+                            .join(', ')}
                         </small>
                       )}
                     </div>
