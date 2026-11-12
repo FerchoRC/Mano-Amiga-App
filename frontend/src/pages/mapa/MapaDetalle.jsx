@@ -3,10 +3,12 @@ import { X } from 'lucide-react';
 import { tipoElemento } from '../../lib/mapa.js';
 import styles from './Mapa.module.css';
 
+// `item.clase` distingue rutas de puntos; `item.tipo` es el tipo del punto.
 export default function MapaDetalle({ item, onClose }) {
   if (!item) return null;
 
-  const tipo = item.tipo === 'ruta' ? tipoElemento('ruta_evacuacion') : tipoElemento(item.tipo ?? item.tipoItem);
+  const esRuta = item.clase === 'ruta';
+  const tipo = esRuta ? tipoElemento('ruta_evacuacion') : tipoElemento(item.tipo);
   const Icon = tipo?.icono ?? tipoElemento('punto_encuentro').icono;
 
   return (
@@ -26,8 +28,10 @@ export default function MapaDetalle({ item, onClose }) {
       <div className={styles.detail}>
         <h3>{item.nombre}</h3>
         <p className="muted">{item.descripcion || 'Sin descripción disponible.'}</p>
-        {item.tipo === 'ruta' && item.origen && item.destino && (
-          <p className="muted">Sigue la flecha: va de {item.origen} a {item.destino}</p>
+        {esRuta && item.origen && item.destino && (
+          <p className="muted">
+            Sigue las flechas: va de {item.origen} a {item.destino}.
+          </p>
         )}
       </div>
     </section>

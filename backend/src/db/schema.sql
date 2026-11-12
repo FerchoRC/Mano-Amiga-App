@@ -103,3 +103,52 @@ CREATE UNIQUE INDEX IF NOT EXISTS plan_un_borrador ON plan_version (id_plan) WHE
 -- estas llaves al final de la transacción evita que una choque con la otra.
 ALTER TABLE plan_emergencia ALTER CONSTRAINT plan_emergencia_id_sede_fkey DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE plan_version ALTER CONSTRAINT plan_version_id_plan_fkey DEFERRABLE INITIALLY DEFERRED;
+
+-- HU-06: brigadas de cada sede. Una por tipo y sede, siempre con un líder
+-- que también es miembro. Un brigadista puede estar en varias brigadas.
+CREATE TABLE IF NOT EXISTS brigada (
+  id_brigada     uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_sede        uuid        NOT NULL REFERENCES sede (id_sede) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+  tipo           varchar(20) NOT NULL CHECK (tipo IN ('primeros_auxilios', 'evacuacion', 'contra_incendios')),
+  id_lider       uuid        NOT NULL REFERENCES usuario (id_usuario) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+  creado_en      timestamptz NOT NULL DEFAULT now(),
+  actualizado_en timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (id_sede, tipo)
+);
+
+CREATE TABLE IF NOT EXISTS brigada_usuario (
+  id_brigada    uuid        NOT NULL REFERENCES brigada (id_brigada) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+  id_usuario    uuid        NOT NULL REFERENCES usuario (id_usuario) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+  fecha_ingreso timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (id_brigada, id_usuario)
+);
+
+CREATE INDEX IF NOT EXISTS brigada_usuario_usuario_idx ON brigada_usuario (id_usuario);
+
+-- HU-07: mapa de evacuación de cada sede, sobre el mapa real (lat/lng).
+-- Puntos: encuentro y equipos. Rutas: trazado [[lat, lng], …] hacia un punto seguro.
+CREATE TABLE IF NOT EXISTS mapa_punto (
+  id_punto    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_sede     uuid          NOT NULL REFERENCES sede (id_sede) ON DELETE CASCADE,
+  tipo        varchar(20)   NOT NULL CHECK (tipo IN ('punto_encuentro', 'extintor', 'botiquin', 'camilla')),
+  nombre      varchar(120)  NOT NULL,
+  descripcion varchar(300)  NOT NULL DEFAULT '',
+  lat         numeric(9, 6) NOT NULL CHECK (lat BETWEEN -90 AND 90),
+  lng         numeric(9, 6) NOT NULL CHECK (lng BETWEEN -180 AND 180),
+  creado_en   timestamptz   NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS mapa_punto_sede_idx ON mapa_punto (id_sede);
+
+CREATE TABLE IF NOT EXISTS mapa_ruta (
+  id_ruta     uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_sede     uuid         NOT NULL REFERENCES sede (id_sede) ON DELETE CASCADE,
+  nombre      varchar(120) NOT NULL,
+  descripcion varchar(300) NOT NULL DEFAULT '',
+  origen      varchar(120),
+  destino     varchar(120),
+  trazado     jsonb        NOT NULL CHECK (jsonb_typeof(trazado) = 'array' AND jsonb_array_length(trazado) >= 2),
+  creado_en   timestamptz  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS mapa_ruta_sede_idx ON mapa_ruta (id_sede);
