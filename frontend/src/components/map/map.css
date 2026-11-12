@@ -130,6 +130,23 @@
   box-shadow: 0 0 0 8px rgb(47 111 222 / 0.22);
 }
 
+.ma-poi.is-draggable {
+  cursor: grab;
+}
+
+.ma-poi.is-draggable:active {
+  cursor: grabbing;
+}
+
+.ma-poi.is-draggable .ma-poi__disc {
+  animation: bounce 1.8s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translate(4px, 4px); }
+  50% { transform: translate(4px, 0px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ma-poi__disc,
   .ma-poi.is-active .ma-poi__disc {

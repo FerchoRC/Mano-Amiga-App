@@ -58,6 +58,21 @@ const MAPAS = {
   },
 };
 
+// HU-11: inventario de equipos para demostración con estados de vencimiento.
+const EQUIPOS = {
+  'Planta Itagüí': [
+    { tipo: 'extintor', nombre: 'Extintor EXT-01 · Recepción', ubicacion: 'Junto a la puerta de entrada principal', fechaVencimiento: '2026-11-28', estado: 'operativo', notas: 'Multipropósito ABC 10 lb' },
+    { tipo: 'extintor', nombre: 'Extintor EXT-02 · Bodega', ubicacion: 'Portón de carga y descarga', fechaVencimiento: '2027-05-15', estado: 'operativo', notas: 'Multipropósito ABC 20 lb' },
+    { tipo: 'botiquin', nombre: 'Botiquín Tipo B · Enfermería', ubicacion: 'Piso 1, consultorio médico', fechaVencimiento: '2026-12-05', estado: 'operativo', notas: 'Dotación completa según norma' },
+    { tipo: 'camilla', nombre: 'Camilla rígida de emergencia', ubicacion: 'Pasillo central, punto de primeros auxilios', fechaVencimiento: null, estado: 'operativo', notas: 'Con correas e inmovilizador de cuello' },
+    { tipo: 'extintor', nombre: 'Extintor EXT-03 · Cocineta', ubicacion: 'Área de descanso', fechaVencimiento: '2026-10-15', estado: 'vencido', notas: 'Requiere recarga urgente' },
+  ],
+  'Bodega Sabaneta': [
+    { tipo: 'extintor', nombre: 'Extintor EXT-01 · Muelle', ubicacion: 'Muelle de carga 1', fechaVencimiento: '2027-02-10', estado: 'operativo', notas: 'Solkaflam 3700 g' },
+    { tipo: 'botiquin', nombre: 'Botiquín Tipo A · Portería', ubicacion: 'Recepción y control de acceso', fechaVencimiento: '2026-11-20', estado: 'operativo', notas: 'Revisión mensual realizada' },
+  ],
+};
+
 const SEDES = [
   {
     nombre: 'Planta Itagüí',
@@ -154,6 +169,14 @@ async function seed() {
           `INSERT INTO mapa_ruta (id_sede, nombre, descripcion, origen, destino, trazado)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [creada.id_sede, r.nombre, r.descripcion, r.origen, r.destino, JSON.stringify(r.trazado)]
+        );
+      }
+
+      for (const eq of EQUIPOS[sede.nombre] ?? []) {
+        await db.query(
+          `INSERT INTO equipo (id_sede, tipo, nombre, ubicacion, fecha_vencimiento, estado, notas)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [creada.id_sede, eq.tipo, eq.nombre, eq.ubicacion, eq.fechaVencimiento, eq.estado, eq.notas]
         );
       }
 

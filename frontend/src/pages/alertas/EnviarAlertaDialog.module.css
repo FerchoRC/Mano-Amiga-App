@@ -1,0 +1,30 @@
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.warningBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--red-50);
+  color: var(--red-700);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.warningBox svg {
+  flex: none;
+  color: var(--red);
+}
+
+.singleSede {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}

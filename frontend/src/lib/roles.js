@@ -10,6 +10,11 @@ export const PERMISOS = {
   BRIGADAS_VER: 'brigadas:ver',
   BRIGADAS_GESTIONAR: 'brigadas:gestionar',
   MAPA_VER: 'mapa:ver',
+  MAPA_GESTIONAR: 'mapa:gestionar',
+  ALERTAS_VER: 'alertas:ver',
+  ALERTAS_ENVIAR: 'alertas:enviar',
+  EQUIPOS_VER: 'equipos:ver',
+  EQUIPOS_GESTIONAR: 'equipos:gestionar',
 };
 
 // Descripción de cada rol tal como lo entiende el negocio (documento, sección 07).

@@ -1,5 +1,5 @@
 import { ArrowRight, BellRing, Check, Scale } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/AuthProvider.jsx';
@@ -7,6 +7,10 @@ import { useToast } from '../components/Toast.jsx';
 import { api } from '../lib/api.js';
 import { fechaCorta, fechaLarga, formatearNumero, primerNombre, saludo } from '../lib/format.js';
 import { PERMISOS, ROLES } from '../lib/roles.js';
+import { useRealtimeEvent } from '../lib/useRealtime.js';
+import AlertaBanner from './alertas/AlertaBanner.jsx';
+import ConfirmarEstado from './alertas/ConfirmarEstado.jsx';
+import PanelRespuestas from './alertas/PanelRespuestas.jsx';
 import styles from './HomePage.module.css';
 
 function obligacion(numEmpleados) {
@@ -184,6 +188,49 @@ export default function HomePage() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [alerta, setAlerta] = useState(null);
+  const esBrigadistaOAdmin = can(PERMISOS.ALERTAS_ENVIAR) || usuario.rol === 'brigadista' || usuario.rol === 'administrador';
+
+  // HU-09: Cargar alerta activa de la empresa/sede
+  const cargarAlerta = useCallback(async () => {
+    try {
+      const res = await api('/api/alertas/activa');
+      setAlerta(res.alerta ?? null);
+    } catch {
+      // Si falla o no hay conexión temporal, no bloquea el home
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarAlerta();
+  }, [cargarAlerta]);
+
+  // Eventos en tiempo real vía WebSocket
+  const onAlertaNueva = useCallback((data) => {
+    if (data?.alerta) {
+      setAlerta(data.alerta);
+      toast(`¡Alerta de emergencia en ${data.alerta.sedeNombre}!`, { tone: 'error' });
+    }
+  }, [toast]);
+
+  const onAlertaFinalizada = useCallback((data) => {
+    setAlerta((actual) => (actual?.id === data?.alertaId ? null : actual));
+    toast('La emergencia fue dada por finalizada.', { tone: 'info' });
+  }, [toast]);
+
+  useRealtimeEvent('alerta:nueva', onAlertaNueva);
+  useRealtimeEvent('alerta:finalizada', onAlertaFinalizada);
+
+  async function handleFinalizarAlerta(idAlerta) {
+    try {
+      await api(`/api/alertas/${idAlerta}/finalizar`, { method: 'POST' });
+      setAlerta(null);
+      toast('Emergencia finalizada con éxito.');
+    } catch (err) {
+      toast(err.message, { tone: 'error' });
+    }
+  }
+
   // Mensaje de bienvenida tras registrar la empresa o aceptar una invitación.
   // El ref evita mostrarlo dos veces para la misma navegación.
   const bienvenida = location.state?.bienvenida;
@@ -203,6 +250,31 @@ export default function HomePage() {
 
   return (
     <div className={styles.page}>
+      {/* HU-09: Banner destacado de emergencia si hay alerta activa */}
+      {alerta && (
+        <AlertaBanner
+          alerta={alerta}
+          puedeFinalizar={can(PERMISOS.ALERTAS_ENVIAR)}
+          onFinalizar={handleFinalizarAlerta}
+        />
+      )}
+
+      {/* HU-10: Confirmar estado para el empleado/personal durante emergencia */}
+      {alerta && (
+        <ConfirmarEstado
+          alerta={alerta}
+          miRespuesta={alerta.miRespuesta}
+          onEstadoConfirmado={(resp) =>
+            setAlerta((prev) => (prev ? { ...prev, miRespuesta: resp } : prev))
+          }
+        />
+      )}
+
+      {/* HU-10: Panel del brigadista en tiempo real */}
+      {alerta && esBrigadistaOAdmin && (
+        <PanelRespuestas alerta={alerta} />
+      )}
+
       <header className={styles.hero}>
         <p className="eyebrow">{fechaLarga()}</p>
         <h1>

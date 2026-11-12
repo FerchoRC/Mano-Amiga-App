@@ -1,24 +1,39 @@
-import { MapPinned } from 'lucide-react';
+import { MapPinned, Pencil } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useAuth } from '../../auth/AuthProvider.jsx';
 import Alert from '../../components/Alert.jsx';
 import Button from '../../components/Button.jsx';
+import Dialog from '../../components/Dialog.jsx';
 import SedeSelect from '../../components/SedeSelect.jsx';
+import { useToast } from '../../components/Toast.jsx';
 import EvacuationMap from '../../components/map/EvacuationMap.jsx';
 import { api } from '../../lib/api.js';
 import { TIPOS_ELEMENTO } from '../../lib/mapa.js';
+import { PERMISOS } from '../../lib/roles.js';
 import useSedeSeleccionada from '../../lib/useSedeSeleccionada.js';
+import AddPuntoDialog from './AddPuntoDialog.jsx';
 import MapaDetalle from './MapaDetalle.jsx';
+import MapaEditorBar from './MapaEditorBar.jsx';
 import MapaLeyenda from './MapaLeyenda.jsx';
 import MapaLista from './MapaLista.jsx';
 import styles from './Mapa.module.css';
 
 export default function MapaPage() {
+  const { can } = useAuth();
+  const toast = useToast();
+  const puedeEditar = can(PERMISOS.MAPA_GESTIONAR) || can(PERMISOS.SEDES_GESTIONAR);
+
   const { sedes, sede, setSedeId, error: errorSedes } = useSedeSeleccionada();
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
   const [seleccionado, setSeleccionado] = useState(null);
   const [visibles, setVisibles] = useState(() => new Set(TIPOS_ELEMENTO.map((tipo) => tipo.id)));
+  const [editando, setEditando] = useState(false);
+  const [dialogAgregar, setDialogAgregar] = useState(false);
+  const [coordenadasNuevo, setCoordenadasNuevo] = useState(null);
+  const [puntoAEliminar, setPuntoAEliminar] = useState(null);
+  const [eliminando, setEliminando] = useState(false);
 
   useEffect(() => {
     if (!sede) return;
@@ -26,6 +41,7 @@ export default function MapaPage() {
     setDatos(null);
     setError(null);
     setSeleccionado(null);
+    setEditando(false);
     api(`/api/sedes/${sede.id}/mapa`, { signal: controller.signal })
       .then(({ puntos = [], rutas = [] }) => {
         setDatos({ puntos, rutas });
@@ -68,6 +84,62 @@ export default function MapaPage() {
     ])
   );
 
+  // HU-08: Mover punto
+  async function handleMoverPunto(idPunto, lat, lng) {
+    // Actualización optimista inmediata
+    setDatos((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        puntos: prev.puntos.map((p) => (p.id === idPunto ? { ...p, lat, lng } : p)),
+      };
+    });
+
+    try {
+      await api(`/api/sedes/${sede.id}/mapa/puntos/${idPunto}`, {
+        method: 'PUT',
+        body: { lat, lng },
+      });
+      toast('Ubicación del punto actualizada.');
+    } catch (err) {
+      toast(err.message, { tone: 'error' });
+    }
+  }
+
+  // HU-08: Eliminar punto
+  async function confirmarEliminar() {
+    if (!puntoAEliminar) return;
+    setEliminando(true);
+    try {
+      await api(`/api/sedes/${sede.id}/mapa/puntos/${puntoAEliminar.id}`, {
+        method: 'DELETE',
+      });
+      setDatos((prev) => ({
+        ...prev,
+        puntos: prev.puntos.filter((p) => p.id !== puntoAEliminar.id),
+      }));
+      if (seleccionado?.id === puntoAEliminar.id) {
+        setSeleccionado(null);
+      }
+      toast(`${puntoAEliminar.nombre} fue eliminado del mapa.`);
+      setPuntoAEliminar(null);
+    } catch (err) {
+      toast(err.message, { tone: 'error' });
+    } finally {
+      setEliminando(false);
+    }
+  }
+
+  const handlePuntoAgregado = (nuevoPunto) => {
+    setDatos((prev) => ({
+      ...prev,
+      puntos: [...(prev?.puntos ?? []), nuevoPunto],
+    }));
+    setVisibles((prev) => new Set(prev).add(nuevoPunto.tipo));
+    setSeleccionado({ ...nuevoPunto, clase: 'punto' });
+    toast(`${nuevoPunto.nombre} fue agregado al mapa.`);
+  };
+
   if (errorSedes) {
     return (
       <div className={styles.page}>
@@ -83,7 +155,26 @@ export default function MapaPage() {
           <h1>Mapa de la sede</h1>
           <p className="muted">Rutas de evacuación, puntos de encuentro y equipos de {sede?.nombre ?? 'la sede'}.</p>
         </div>
+        {puedeEditar && sede && (
+          <Button
+            variant={editando ? 'primary' : 'secondary'}
+            icon={Pencil}
+            onClick={() => setEditando((v) => !v)}
+          >
+            {editando ? 'Terminar edición' : 'Editar mapa'}
+          </Button>
+        )}
       </header>
+
+      {editando && (
+        <MapaEditorBar
+          onAgregarPunto={() => {
+            setCoordenadasNuevo(null);
+            setDialogAgregar(true);
+          }}
+          onFinalizarEdicion={() => setEditando(false)}
+        />
+      )}
 
       {sedes.length > 1 && <SedeSelect sedes={sedes} value={sede?.id} onChange={setSedeId} />}
 
@@ -112,6 +203,12 @@ export default function MapaPage() {
                 visibles={visibles}
                 seleccionado={seleccionado}
                 onSelect={setSeleccionado}
+                editando={editando}
+                onMoverPunto={handleMoverPunto}
+                onClicMapa={(coords) => {
+                  setCoordenadasNuevo(coords);
+                  setDialogAgregar(true);
+                }}
               />
             )}
           </section>
@@ -131,10 +228,48 @@ export default function MapaPage() {
               tiposPresentes={tiposPresentes}
             />
 
-            {seleccionado && <MapaDetalle item={seleccionado} onClose={() => setSeleccionado(null)} />}
+            {seleccionado && (
+              <MapaDetalle
+                item={seleccionado}
+                puedeEditar={puedeEditar}
+                onEliminar={(p) => setPuntoAEliminar(p)}
+                onClose={() => setSeleccionado(null)}
+              />
+            )}
           </aside>
         </div>
       )}
+
+      {dialogAgregar && (
+        <AddPuntoDialog
+          open={dialogAgregar}
+          sede={sede}
+          coordenadas={coordenadasNuevo}
+          onClose={() => {
+            setDialogAgregar(false);
+            setCoordenadasNuevo(null);
+          }}
+          onAdded={handlePuntoAgregado}
+        />
+      )}
+
+      <Dialog
+        open={Boolean(puntoAEliminar)}
+        onClose={() => !eliminando && setPuntoAEliminar(null)}
+        size="sm"
+        title={`¿Eliminar ${puntoAEliminar?.nombre}?`}
+        description="El elemento se eliminará del mapa de evacuación de esta sede."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setPuntoAEliminar(null)} disabled={eliminando}>
+              Volver
+            </Button>
+            <Button variant="danger" onClick={confirmarEliminar} loading={eliminando}>
+              Eliminar punto
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 }

@@ -5,10 +5,10 @@ import { tipoElemento } from '../../lib/mapa.js';
 
 const CACHE = new Map();
 
-export function crearIconoElemento(tipo, { activo = false } = {}) {
+export function crearIconoElemento(tipo, { activo = false, arrastrable = false } = {}) {
   const config = tipoElemento(tipo) ?? tipoElemento('punto_encuentro');
   const tono = config?.tono ?? 'green';
-  const clave = `${tipo}-${activo ? 'activo' : 'inactivo'}`;
+  const clave = `${tipo}-${activo ? 'activo' : 'inactivo'}-${arrastrable ? 'arrastrable' : 'fijo'}`;
 
   if (CACHE.has(clave)) {
     return CACHE.get(clave);
@@ -20,7 +20,7 @@ export function crearIconoElemento(tipo, { activo = false } = {}) {
   );
 
   const icon = L.divIcon({
-    className: `ma-poi ma-poi--${tono}${activo ? ' is-active' : ''}`,
+    className: `ma-poi ma-poi--${tono}${activo ? ' is-active' : ''}${arrastrable ? ' is-draggable' : ''}`,
     html: `<span class="ma-poi__disc">${svg}</span>`,
     iconSize: [44, 44],
     iconAnchor: [22, 22],
