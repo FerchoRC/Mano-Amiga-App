@@ -53,7 +53,7 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 | POST | `/api/usuarios/:id/contrasena` | Administrador | Restablece la contraseña de otra persona |
 | POST | `/api/usuarios/invitaciones` | Administrador | Invita con nombre, correo y rol |
 | POST | `/api/usuarios/:id/invitacion` | Administrador | Genera un nuevo enlace de invitación |
-| PATCH | `/api/usuarios/:id` | Administrador | Cambia `rol` y/o `activo` |
+| PATCH | `/api/usuarios/:id` | Administrador | Cambia `rol`, `activo` y/o `sedeId` (`null` = todas las sedes) |
 | DELETE | `/api/usuarios/:id` | Administrador | Cancela una invitación pendiente |
 | GET | `/api/invitaciones/:token` | Público | Datos de la invitación |
 | POST | `/api/invitaciones/:token/aceptar` | Público | Crea la contraseña e inicia sesión |
@@ -70,13 +70,24 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 | POST | `/api/sedes/:id/plan/borrador/aprobar` | Administrador | Aprueba el borrador si está completo |
 | POST | `/api/sedes/:id/plan/versiones` | Administrador | Abre una versión nueva a partir de la vigente |
 | DELETE | `/api/sedes/:id/plan/borrador` | Administrador | Descarta el borrador |
-
 | GET | `/api/brigadas?sede=` | Sesión | HU-06: brigadas de la empresa (o de una sede) con líder y miembros |
 | GET | `/api/brigadas/:id` | Sesión | Una brigada |
 | POST | `/api/brigadas` | Administrador | Crea una brigada: `sedeId`, `tipo`, `liderId`, `miembrosIds` |
 | PUT | `/api/brigadas/:id` | Administrador | Cambia el líder y los miembros |
 | DELETE | `/api/brigadas/:id` | Administrador | Elimina la brigada |
-| GET | `/api/sedes/:id/mapa` | Sesión | HU-07: puntos (encuentro, extintores, botiquines, camillas) y rutas de evacuación |
+| GET | `/api/sedes/:id/mapa` | Sesión | HU-07: puntos (encuentro, salidas, extintores, botiquines, camillas) y rutas de evacuación |
+| POST | `/api/sedes/:id/mapa/puntos` | Administrador | HU-08: agrega un punto (`tipo`, `nombre`, `descripcion?`, `lat`, `lng`) |
+| PUT | `/api/sedes/:id/mapa/puntos/:idPunto` | Administrador | Mueve o edita un punto (campos parciales) |
+| DELETE | `/api/sedes/:id/mapa/puntos/:idPunto` | Administrador | Elimina un punto |
+| GET | `/api/alertas/activa` | Sesión | HU-09: alerta activa que le aplica a la persona, con su respuesta |
+| POST | `/api/alertas` | Administrador o brigadista | Envía una alerta: `sedeId`, `tipo`, `instrucciones` |
+| POST | `/api/alertas/:id/finalizar` | Administrador o brigadista | Da por terminada la emergencia |
+| POST | `/api/alertas/:id/respuestas` | Sesión | HU-10: `estado` (`a_salvo` o `necesita_ayuda`) y `mensaje?` |
+| GET | `/api/alertas/:id/respuestas` | Administrador o brigadista | Confirmados y pendientes de la alerta |
+| GET | `/api/sedes/:id/equipos` | Sesión | HU-11: inventario de la sede |
+| POST | `/api/sedes/:id/equipos` | Administrador | Registra un equipo |
+| PUT | `/api/equipos/:id` | Administrador | Edita un equipo (campos parciales; `fechaVencimiento: null` la quita) |
+| DELETE | `/api/equipos/:id` | Administrador | Elimina un equipo |
 
 ### Brigadas
 
@@ -89,7 +100,37 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 
 - Se dibuja sobre el mapa real con latitud y longitud (`mapa_punto` y `mapa_ruta`).
 - Las rutas guardan su trazado como `[[lat, lng], …]`; el frontend dibuja flechas en el sentido de evacuación.
-- Por ahora los puntos y rutas se cargan con el seed; agregarlos y editarlos desde la app es HU-08.
+- Tipos de punto: `punto_encuentro`, `salida`, `extintor`, `botiquin` y `camilla`.
+- Solo el administrador agrega, mueve o elimina puntos; cada cambio se avisa por tiempo real
+  (`mapa:actualizado`) y el mapa se refresca para todos los que lo tienen abierto.
+
+### Alertas de emergencia
+
+- Tipos: `incendio`, `sismo`, `evacuacion`, `inundacion`, `medica`, `amenaza` y `otra`.
+- Una sola alerta activa por sede: enviar otra responde `409 ALERTA_ACTIVA`.
+- Cada persona tiene una sede (`usuario.id_sede`). La alerta llega a las personas activas de esa
+  sede y a las que no tienen sede asignada (por ejemplo, el administrador).
+- Solo los destinatarios pueden responder (`403 OTRA_SEDE`) y no se responde una alerta finalizada (`409`).
+- Los pendientes son los destinatarios que aún no responden; las invitaciones sin aceptar no cuentan.
+
+### Inventario de equipos
+
+- Tipos: `extintor`, `botiquin`, `camilla` y `otro`; estados: `operativo`, `mantenimiento`, `vencido` y `baja`.
+- Cada equipo pertenece a una sede. La fecha de vencimiento o recarga es opcional (`AAAA-MM-DD`).
+- El frontend resalta los que vencen en 30 días o menos y los ya vencidos.
+
+### Tiempo real (`/ws`)
+
+WebSocket en el mismo puerto del API. El token **no** va en la URL:
+
+1. El cliente se conecta a `/ws` y envía `{ "action": "auth", "token": "…" }` (tiene 10 s).
+2. El servidor responde `{ "event": "authenticated" }`; con un token inválido cierra con código `4401`.
+3. Para entrar a una sala: `{ "action": "join", "room": "…" }`. Salas permitidas:
+   `empresa:<su empresa>`, `sede:<sede de su empresa>` y `alerta:<id>` (solo administrador o brigadista).
+4. Eventos: `alerta:nueva`, `alerta:finalizada` y `mapa:actualizado` a la empresa (solo con ids);
+   `alerta:respuesta` a la sala de la alerta.
+
+La sesión se revisa cada minuto: si se cierra o vence, el servidor envía `sesion:cerrada` y desconecta.
 
 ### Plan de emergencias y versiones
 

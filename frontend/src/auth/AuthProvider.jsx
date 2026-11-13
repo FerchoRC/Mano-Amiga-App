@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { api, CODIGOS_SESION_PERDIDA, setSessionLostHandler, tokenStore } from '../lib/api.js';
+import { realtime } from '../lib/realtime.js';
 import IdleWatcher from './IdleWatcher.jsx';
 
 const AuthContext = createContext(null);
@@ -15,6 +16,7 @@ export function AuthProvider({ children }) {
 
   const endSession = useCallback((aviso = null) => {
     tokenStore.clear();
+    realtime.disconnect();
     setState({ status: 'anonymous', session: null, aviso });
   }, []);
 

@@ -18,6 +18,7 @@ import NotFoundPage from './pages/NotFoundPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 // Las pantallas con mapear usan Leaflet y se cargan solo cuando se visitan.
 const BrigadasPage = lazy(() => import('./pages/brigadas/BrigadasPage.jsx'));
+const EquiposPage = lazy(() => import('./pages/equipos/EquiposPage.jsx'));
 const MapaPage = lazy(() => import('./pages/mapa/MapaPage.jsx'));
 const PlanEditorPage = lazy(() => import('./pages/sedes/PlanEditorPage.jsx'));
 const SedeDetailPage = lazy(() => import('./pages/sedes/SedeDetailPage.jsx'));
@@ -93,6 +94,14 @@ export default function App() {
             element={
               <RequirePermission permiso={PERMISOS.MAPA_VER}>
                 <MapaPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="/equipos"
+            element={
+              <RequirePermission permiso={PERMISOS.EQUIPOS_VER}>
+                <EquiposPage />
               </RequirePermission>
             }
           />

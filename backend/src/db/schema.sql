@@ -152,3 +152,69 @@ CREATE TABLE IF NOT EXISTS mapa_ruta (
 );
 
 CREATE INDEX IF NOT EXISTS mapa_ruta_sede_idx ON mapa_ruta (id_sede);
+
+-- HU-09 y HU-10: Alertas de emergencia y confirmación de estado
+CREATE TABLE IF NOT EXISTS alerta (
+  id_alerta      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_empresa     uuid         NOT NULL REFERENCES empresa (id_empresa) ON DELETE CASCADE,
+  id_sede        uuid         NOT NULL REFERENCES sede (id_sede) ON DELETE CASCADE,
+  id_usuario     uuid         NOT NULL REFERENCES usuario (id_usuario) ON DELETE CASCADE,
+  tipo           varchar(40)  NOT NULL,
+  instrucciones  text         NOT NULL,
+  activa         boolean      NOT NULL DEFAULT true,
+  creado_en      timestamptz  NOT NULL DEFAULT now(),
+  finalizado_en  timestamptz,
+  finalizado_por uuid         REFERENCES usuario (id_usuario) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS alerta_empresa_activa_idx ON alerta (id_empresa, activa);
+CREATE INDEX IF NOT EXISTS alerta_sede_idx ON alerta (id_sede);
+
+CREATE TABLE IF NOT EXISTS alerta_respuesta (
+  id_respuesta   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_alerta      uuid         NOT NULL REFERENCES alerta (id_alerta) ON DELETE CASCADE,
+  id_usuario     uuid         NOT NULL REFERENCES usuario (id_usuario) ON DELETE CASCADE,
+  estado         varchar(30)  NOT NULL CHECK (estado IN ('a_salvo', 'necesita_ayuda')),
+  mensaje        text,
+  respondido_en  timestamptz  NOT NULL DEFAULT now(),
+  UNIQUE (id_alerta, id_usuario)
+);
+
+CREATE INDEX IF NOT EXISTS alerta_respuesta_alerta_idx ON alerta_respuesta (id_alerta);
+
+-- HU-11: Inventario de equipos de emergencia por sede
+CREATE TABLE IF NOT EXISTS equipo (
+  id_equipo         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_sede           uuid         NOT NULL REFERENCES sede (id_sede) ON DELETE CASCADE,
+  tipo              varchar(30)  NOT NULL CHECK (tipo IN ('extintor', 'botiquin', 'camilla', 'otro')),
+  nombre            varchar(120) NOT NULL,
+  ubicacion         varchar(200) NOT NULL,
+  fecha_vencimiento date,
+  estado            varchar(20)  NOT NULL DEFAULT 'operativo' CHECK (estado IN ('operativo', 'mantenimiento', 'vencido', 'baja')),
+  notas             text,
+  creado_en         timestamptz  NOT NULL DEFAULT now(),
+  actualizado_en    timestamptz  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS equipo_sede_idx ON equipo (id_sede);
+
+-- HU-08: la tarjeta menciona salidas de emergencia como punto del mapa.
+ALTER TABLE mapa_punto DROP CONSTRAINT IF EXISTS mapa_punto_tipo_check;
+ALTER TABLE mapa_punto ADD CONSTRAINT mapa_punto_tipo_check
+  CHECK (tipo IN ('punto_encuentro', 'salida', 'extintor', 'botiquin', 'camilla'));
+
+-- HU-09: cada persona pertenece a una sede y recibe las alertas de esa sede.
+-- Quien no tiene sede asignada (p. ej. un administrador general) las recibe todas.
+ALTER TABLE usuario ADD COLUMN IF NOT EXISTS id_sede uuid
+  REFERENCES sede (id_sede) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED;
+CREATE INDEX IF NOT EXISTS usuario_sede_idx ON usuario (id_sede);
+
+-- HU-09: como máximo una alerta activa por sede.
+CREATE UNIQUE INDEX IF NOT EXISTS alerta_una_activa_por_sede ON alerta (id_sede) WHERE activa;
+
+-- Al borrar una empresa, la alerta se alcanza por varias cascadas (empresa, sede,
+-- usuario); revisar estas llaves al final de la transacción evita que choquen.
+ALTER TABLE alerta ALTER CONSTRAINT alerta_id_empresa_fkey DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE alerta ALTER CONSTRAINT alerta_id_sede_fkey DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE alerta ALTER CONSTRAINT alerta_id_usuario_fkey DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE alerta ALTER CONSTRAINT alerta_finalizado_por_fkey DEFERRABLE INITIALLY DEFERRED;

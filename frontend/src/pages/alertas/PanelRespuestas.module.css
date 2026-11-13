@@ -1,0 +1,247 @@
+.panel {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.headerTitle {
+  display: grid;
+  gap: 4px;
+}
+
+.headerTitle h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--blue-50);
+  color: var(--blue-600);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.kpiCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+
+.kpiCard:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.kpiCard.kpiActive {
+  box-shadow: 0 0 0 2px var(--navy);
+}
+
+.kpiTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kpiCard strong {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.kpiSafe {
+  background: var(--green-50);
+  color: var(--green-700);
+  border-color: rgb(46 158 91 / 0.3);
+}
+
+.kpiHelp {
+  background: var(--red-50);
+  color: var(--red-700);
+  border-color: rgb(215 38 61 / 0.3);
+}
+
+.kpiPending {
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.progressSection {
+  display: grid;
+  gap: 8px;
+}
+
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.progressBar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progressBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+  transition: width 0.4s var(--ease);
+}
+
+.lists {
+  display: grid;
+  gap: 20px;
+}
+
+.groupDanger h4,
+.groupSafe h4,
+.groupPending h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.groupDanger h4 { color: var(--red); }
+.groupSafe h4 { color: var(--green-700); }
+.groupPending h4 { color: var(--text-muted); }
+
+.personList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personRow,
+.personRowHelp {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.personRowHelp {
+  border-color: rgb(215 38 61 / 0.4);
+  background: rgb(215 38 61 / 0.03);
+}
+
+.rowPending {
+  opacity: 0.85;
+}
+
+.personBody {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.personBody strong {
+  font-size: 14px;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.personBody span {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.helpMessage {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--red-700);
+  font-weight: 500;
+}
+
+.timestamp {
+  font-size: 12px;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.pendingTag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  color: var(--text-subtle);
+}
+
+@media (max-width: 559px) {
+  .panel {
+    padding: 18px;
+  }
+}

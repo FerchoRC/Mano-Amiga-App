@@ -16,18 +16,25 @@ import {
 import { authenticate, requirePermission } from '../middleware/auth.js';
 import { enviarInvitacion } from '../services/mailer.js';
 import { issueInvitation } from '../services/invitations.js';
+import { findSede } from '../services/sedes.js';
 import { closeAllSessions } from '../services/sessions.js';
+
+// HU-09: sede a la que pertenece la persona; recibe las alertas de esa sede.
+// null = sin sede (recibe las alertas de todas).
+const sedeIdSchema = z.uuid('Elige una sede válida.').nullable().optional();
 
 const invitacionSchema = z.object({
   nombre: nombreSchema,
   correo: correoSchema,
   rol: rolSchema,
+  sedeId: sedeIdSchema,
 });
 
 const crearSchema = z.object({
   nombre: nombreSchema,
   correo: correoSchema,
   rol: rolSchema,
+  sedeId: sedeIdSchema,
   contrasena: contrasenaSchema,
   debeCambiarContrasena: z.boolean().default(true),
 });
@@ -38,15 +45,27 @@ const contrasenaAdminSchema = z.object({
 });
 
 const cambioSchema = z
-  .object({ rol: rolSchema.optional(), activo: z.boolean().optional() })
-  .refine((datos) => datos.rol !== undefined || datos.activo !== undefined, {
-    message: 'Indica el rol o el estado a cambiar.',
-  });
+  .object({ rol: rolSchema.optional(), activo: z.boolean().optional(), sedeId: sedeIdSchema })
+  .refine(
+    (datos) => datos.rol !== undefined || datos.activo !== undefined || datos.sedeId !== undefined,
+    { message: 'Indica el rol, el estado o la sede a cambiar.' }
+  );
 
 const COLUMNAS_USUARIO = `
   u.id_usuario, u.nombre, u.correo, u.rol, u.activo, u.ultimo_acceso, u.creado_en,
   u.contrasena_hash IS NULL AS pendiente, u.debe_cambiar_contrasena,
+  u.id_sede, sd.nombre AS sede_nombre,
   i.expira_en AS invitacion_expira_en`;
+
+const JOINS_USUARIO = `
+  LEFT JOIN invitacion i USING (id_usuario)
+  LEFT JOIN sede sd ON sd.id_sede = u.id_sede`;
+
+// La sede elegida debe ser de la misma empresa.
+async function validarSede(empresaId, sedeId) {
+  if (sedeId) await findSede(pool, empresaId, sedeId);
+  return sedeId ?? null;
+}
 
 function toUsuarioDto(row) {
   return {
@@ -56,6 +75,7 @@ function toUsuarioDto(row) {
     rol: row.rol,
     estado: row.pendiente ? 'pendiente' : row.activo ? 'activo' : 'inactivo',
     contrasenaTemporal: row.debe_cambiar_contrasena,
+    sede: row.id_sede ? { id: row.id_sede, nombre: row.sede_nombre } : null,
     ultimoAcceso: row.ultimo_acceso,
     creadoEn: row.creado_en,
     invitacionExpiraEn: row.pendiente ? row.invitacion_expira_en : null,
@@ -69,7 +89,7 @@ async function findUsuario(db, empresaId, idUsuario) {
   const { rows } = await db.query(
     `SELECT ${COLUMNAS_USUARIO}
        FROM usuario u
-       LEFT JOIN invitacion i USING (id_usuario)
+       ${JOINS_USUARIO}
       WHERE u.id_empresa = $1 AND u.id_usuario = $2`,
     [empresaId, idUsuario]
   );
@@ -102,7 +122,7 @@ router.get('/', async (req, res) => {
   const { rows } = await pool.query(
     `SELECT ${COLUMNAS_USUARIO}
        FROM usuario u
-       LEFT JOIN invitacion i USING (id_usuario)
+       ${JOINS_USUARIO}
       WHERE u.id_empresa = $1
       ORDER BY u.contrasena_hash IS NULL, lower(u.nombre)`,
     [req.auth.usuario.empresaId]
@@ -118,6 +138,7 @@ const correoEnUso = () => {
 // El administrador crea la cuenta con una contraseña, sin pasar por invitación.
 router.post('/', validateBody(crearSchema), async (req, res) => {
   const { nombre, correo, rol, contrasena, debeCambiarContrasena } = req.body;
+  const sedeId = await validarSede(req.auth.usuario.empresaId, req.body.sedeId);
   const hash = await hashPassword(contrasena);
 
   let creado;
@@ -126,10 +147,10 @@ router.post('/', validateBody(crearSchema), async (req, res) => {
       rows: [creado],
     } = await pool.query(
       `INSERT INTO usuario
-         (id_empresa, nombre, correo, contrasena_hash, rol, invitado_por, debe_cambiar_contrasena)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+         (id_empresa, nombre, correo, contrasena_hash, rol, invitado_por, debe_cambiar_contrasena, id_sede)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id_usuario`,
-      [req.auth.usuario.empresaId, nombre, correo, hash, rol, req.auth.usuario.id, debeCambiarContrasena]
+      [req.auth.usuario.empresaId, nombre, correo, hash, rol, req.auth.usuario.id, debeCambiarContrasena, sedeId]
     ));
   } catch (error) {
     if (error.code === PG_UNIQUE_VIOLATION && error.constraint === 'usuario_correo_unico') {
@@ -173,6 +194,7 @@ router.post('/:id/contrasena', validateBody(contrasenaAdminSchema), async (req, 
 
 router.post('/invitaciones', validateBody(invitacionSchema), async (req, res) => {
   const { nombre, correo, rol } = req.body;
+  const sedeId = await validarSede(req.auth.usuario.empresaId, req.body.sedeId);
 
   let resultado;
   try {
@@ -180,10 +202,10 @@ router.post('/invitaciones', validateBody(invitacionSchema), async (req, res) =>
       const {
         rows: [nuevo],
       } = await db.query(
-        `INSERT INTO usuario (id_empresa, nombre, correo, rol, invitado_por)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO usuario (id_empresa, nombre, correo, rol, invitado_por, id_sede)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id_usuario`,
-        [req.auth.usuario.empresaId, nombre, correo, rol, req.auth.usuario.id]
+        [req.auth.usuario.empresaId, nombre, correo, rol, req.auth.usuario.id, sedeId]
       );
       const { enlace } = await issueInvitation(db, nuevo.id_usuario);
       const usuario = await findUsuario(db, req.auth.usuario.empresaId, nuevo.id_usuario);
@@ -218,14 +240,17 @@ router.post('/:id/invitacion', async (req, res) => {
   res.json({ usuario: toUsuarioDto(actualizado), enlace, correoEnviado });
 });
 
-// Cambiar el rol o activar/desactivar. Desactivar cierra sus sesiones al instante.
+// Cambiar el rol, la sede o activar/desactivar. Desactivar cierra sus sesiones al instante.
 router.patch('/:id', validateBody(cambioSchema), async (req, res) => {
   const { rol, activo } = req.body;
   const { empresaId, id: idActual } = req.auth.usuario;
 
   const usuario = await findUsuario(pool, empresaId, req.params.id);
+  const cambiaSede = req.body.sedeId !== undefined;
+  const sedeId = cambiaSede ? await validarSede(empresaId, req.body.sedeId) : null;
 
-  if (usuario.id_usuario === idActual) {
+  // La propia sede sí se puede cambiar; el propio rol o estado, no.
+  if (usuario.id_usuario === idActual && (rol !== undefined || activo !== undefined)) {
     throw new AppError(
       403,
       'ACCION_SOBRE_SI_MISMO',
@@ -243,10 +268,11 @@ router.patch('/:id', validateBody(cambioSchema), async (req, res) => {
   const actualizado = await withTransaction(async (db) => {
     await db.query(
       `UPDATE usuario
-          SET rol    = COALESCE($3, rol),
-              activo = COALESCE($4, activo)
+          SET rol     = COALESCE($3, rol),
+              activo  = COALESCE($4, activo),
+              id_sede = CASE WHEN $5 THEN $6::uuid ELSE id_sede END
         WHERE id_empresa = $1 AND id_usuario = $2`,
-      [empresaId, usuario.id_usuario, rol ?? null, activo ?? null]
+      [empresaId, usuario.id_usuario, rol ?? null, activo ?? null, cambiaSede, sedeId]
     );
     if (activo === false) await closeAllSessions(db, usuario.id_usuario);
     return findUsuario(db, empresaId, usuario.id_usuario);

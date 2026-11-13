@@ -6,8 +6,10 @@ import { testDatabaseConnection } from './config/db.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.routes.js';
+import alertasRoutes from './routes/alertas.routes.js';
 import brigadasRoutes from './routes/brigadas.routes.js';
 import empresasRoutes from './routes/empresas.routes.js';
+import equiposRoutes from './routes/equipos.routes.js';
 import invitacionesRoutes from './routes/invitaciones.routes.js';
 import mapaRoutes from './routes/mapa.routes.js';
 import planesRoutes from './routes/planes.routes.js';
@@ -41,6 +43,8 @@ export function createApp() {
   app.use('/api/sedes/:idSede/mapa', mapaRoutes);
   app.use('/api/sedes', sedesRoutes);
   app.use('/api/brigadas', brigadasRoutes);
+  app.use('/api/alertas', alertasRoutes);
+  app.use('/api', equiposRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

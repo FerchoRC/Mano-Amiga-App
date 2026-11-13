@@ -44,6 +44,7 @@ export function toEmpresaDto(row) {
 export async function getSessionPayload(db, idUsuario) {
   const { rows } = await db.query(
     `SELECT u.id_usuario, u.nombre, u.correo, u.rol, u.debe_cambiar_contrasena,
+            u.id_sede, (SELECT nombre FROM sede WHERE id_sede = u.id_sede) AS sede_nombre,
             e.id_empresa, e.nit, e.digito_verificacion, e.razon_social, e.sector,
             e.num_empleados, e.creado_en
        FROM usuario u
@@ -60,6 +61,7 @@ export async function getSessionPayload(db, idUsuario) {
       correo: row.correo,
       rol: row.rol,
       debeCambiarContrasena: row.debe_cambiar_contrasena,
+      sede: row.id_sede ? { id: row.id_sede, nombre: row.sede_nombre } : null,
     },
     empresa: toEmpresaDto(row),
     permisos: permisosDe(row.rol),

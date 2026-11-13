@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
+import { useAuth } from '../auth/AuthProvider.jsx';
 import { api } from './api.js';
 
 export default function useSedeSeleccionada() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { session } = useAuth();
+  const miSedeId = session?.usuario.sede?.id;
   const [sedes, setSedes] = useState([]);
   const [error, setError] = useState(null);
 
@@ -28,8 +31,9 @@ export default function useSedeSeleccionada() {
     if (sedeIdConsulta && sedes.some((item) => item.id === sedeIdConsulta)) {
       return sedes.find((item) => item.id === sedeIdConsulta);
     }
-    return sedes[0];
-  }, [sedes, sedeIdConsulta]);
+    // Por defecto, la sede donde trabaja la persona.
+    return sedes.find((item) => item.id === miSedeId) ?? sedes[0];
+  }, [sedes, sedeIdConsulta, miSedeId]);
 
   const setSedeId = (id) => {
     const next = new URLSearchParams(searchParams);

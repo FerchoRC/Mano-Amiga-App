@@ -34,6 +34,7 @@ function flechasDeRuta(trazado) {
 
 // HU-07: mapa de evacuación de la sede. Cada elemento se dibuja con su ícono
 // (ver la leyenda) y se puede ocultar por tipo con `visibles`.
+// HU-08: soporte de modo edición para mover puntos y hacer clic en el mapa.
 export default function EvacuationMap({
   sede,
   puntos = [],
@@ -42,6 +43,9 @@ export default function EvacuationMap({
   seleccionado,
   onSelect,
   className = '',
+  editando = false,
+  onMoverPunto,
+  onClicMapa,
 }) {
   const containerRef = useRef(null);
   const mapRef = useLeafletMap(containerRef, {
@@ -54,6 +58,27 @@ export default function EvacuationMap({
   const seleccionadoRef = useRef(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const onMoverPuntoRef = useRef(onMoverPunto);
+  onMoverPuntoRef.current = onMoverPunto;
+  const onClicMapaRef = useRef(onClicMapa);
+  onClicMapaRef.current = onClicMapa;
+
+  // Manejador de clics en el mapa en modo edición
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const handleClick = (e) => {
+      if (editando) {
+        onClicMapaRef.current?.(e.latlng);
+      }
+    };
+
+    map.on('click', handleClick);
+    return () => {
+      map.off('click', handleClick);
+    };
+  }, [mapRef, editando]);
 
   // Dibujar la sede, los puntos y las rutas, y encuadrarlos.
   useEffect(() => {
@@ -81,13 +106,25 @@ export default function EvacuationMap({
 
     for (const punto of puntos) {
       const marcador = L.marker([punto.lat, punto.lng], {
-        icon: crearIconoElemento(punto.tipo),
+        icon: crearIconoElemento(punto.tipo, { arrastrable: editando }),
         keyboard: true,
         title: punto.nombre,
         riseOnHover: true,
+        draggable: editando,
       })
-        .bindTooltip(punto.nombre, { direction: 'top' })
+        .bindTooltip(
+          editando ? `${punto.nombre} (arrastra para reubicar)` : punto.nombre,
+          { direction: 'top' }
+        )
         .on('click', () => onSelectRef.current?.({ ...punto, clase: 'punto' }));
+
+      if (editando) {
+        marcador.on('dragend', (e) => {
+          const coords = e.target.getLatLng();
+          onMoverPuntoRef.current?.(punto.id, coords.lat, coords.lng);
+        });
+      }
+
       elementos.set(punto.id, { tipo: punto.tipo, capa: marcador, marcador });
       limites.extend([punto.lat, punto.lng]);
     }
@@ -102,7 +139,7 @@ export default function EvacuationMap({
       capa.remove();
       for (const { capa: c } of elementos.values()) c.remove();
     };
-  }, [mapRef, puntos, rutas, sede]);
+  }, [mapRef, puntos, rutas, sede, editando]);
 
   // Mostrar u ocultar por tipo, según la leyenda.
   useEffect(() => {

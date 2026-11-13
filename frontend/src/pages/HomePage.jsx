@@ -1,5 +1,5 @@
 import { ArrowRight, BellRing, Check, Scale } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/AuthProvider.jsx';
@@ -7,6 +7,10 @@ import { useToast } from '../components/Toast.jsx';
 import { api } from '../lib/api.js';
 import { fechaCorta, fechaLarga, formatearNumero, primerNombre, saludo } from '../lib/format.js';
 import { PERMISOS, ROLES } from '../lib/roles.js';
+import { useRealtimeEvent } from '../lib/useRealtime.js';
+import AlertaBanner from './alertas/AlertaBanner.jsx';
+import ConfirmarEstado from './alertas/ConfirmarEstado.jsx';
+import PanelRespuestas from './alertas/PanelRespuestas.jsx';
 import styles from './HomePage.module.css';
 
 function obligacion(numEmpleados) {
@@ -184,6 +188,57 @@ export default function HomePage() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [alerta, setAlerta] = useState(null);
+  const alertaRef = useRef(null);
+  alertaRef.current = alerta;
+  const esBrigadistaOAdmin = can(PERMISOS.ALERTAS_ENVIAR) || usuario.rol === 'brigadista' || usuario.rol === 'administrador';
+
+  // HU-09: alerta activa que le corresponde a esta persona (la de su sede).
+  const cargarAlerta = useCallback(async () => {
+    try {
+      const res = await api('/api/alertas/activa');
+      setAlerta(res.alerta ?? null);
+      return res.alerta ?? null;
+    } catch {
+      // Si falla o no hay conexión temporal, no bloquea el inicio.
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarAlerta();
+  }, [cargarAlerta]);
+
+  // El aviso en tiempo real solo trae identificadores: el servidor decide si la
+  // alerta es para esta persona según su sede.
+  const onAlertaNueva = useCallback(async () => {
+    const nueva = await cargarAlerta();
+    // Quien la envía ya recibió su propia confirmación.
+    if (nueva && nueva.remitenteId !== usuario.id) {
+      toast(`¡Alerta de emergencia en ${nueva.sedeNombre}!`, { tone: 'error' });
+    }
+  }, [cargarAlerta, toast, usuario.id]);
+
+  const onAlertaFinalizada = useCallback((data) => {
+    // Solo avisa si la persona estaba viendo esa alerta (quien la finaliza ya tuvo su aviso).
+    if (alertaRef.current?.id !== data?.alertaId) return;
+    setAlerta(null);
+    toast('La emergencia fue dada por finalizada.', { tone: 'info' });
+  }, [toast]);
+
+  useRealtimeEvent('alerta:nueva', onAlertaNueva);
+  useRealtimeEvent('alerta:finalizada', onAlertaFinalizada);
+
+  async function handleFinalizarAlerta(idAlerta) {
+    try {
+      await api(`/api/alertas/${idAlerta}/finalizar`, { method: 'POST' });
+      setAlerta(null);
+      toast('Emergencia finalizada con éxito.');
+    } catch (err) {
+      toast(err.message, { tone: 'error' });
+    }
+  }
+
   // Mensaje de bienvenida tras registrar la empresa o aceptar una invitación.
   // El ref evita mostrarlo dos veces para la misma navegación.
   const bienvenida = location.state?.bienvenida;
@@ -203,6 +258,31 @@ export default function HomePage() {
 
   return (
     <div className={styles.page}>
+      {/* HU-09: Banner destacado de emergencia si hay alerta activa */}
+      {alerta && (
+        <AlertaBanner
+          alerta={alerta}
+          puedeFinalizar={can(PERMISOS.ALERTAS_ENVIAR)}
+          onFinalizar={handleFinalizarAlerta}
+        />
+      )}
+
+      {/* HU-10: Confirmar estado para el empleado/personal durante emergencia */}
+      {alerta && (
+        <ConfirmarEstado
+          alerta={alerta}
+          miRespuesta={alerta.miRespuesta}
+          onEstadoConfirmado={(resp) =>
+            setAlerta((prev) => (prev ? { ...prev, miRespuesta: resp } : prev))
+          }
+        />
+      )}
+
+      {/* HU-10: Panel del brigadista en tiempo real */}
+      {alerta && esBrigadistaOAdmin && (
+        <PanelRespuestas alerta={alerta} />
+      )}
+
       <header className={styles.hero}>
         <p className="eyebrow">{fechaLarga()}</p>
         <h1>

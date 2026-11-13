@@ -141,10 +141,13 @@ puede usar.
 | Registrar y editar sedes | ✅ | | |
 | Crear, editar y aprobar planes de emergencia | ✅ | | |
 | Crear y editar brigadas | ✅ | | |
+| Editar puntos del mapa de evacuación | ✅ | | |
+| Enviar alertas de emergencia | ✅ | ✅ | |
+| Confirmar estado ante una emergencia | ✅ | ✅ | ✅ |
+| Gestionar inventario de equipos | ✅ | | |
 
-Por ahora brigadista y empleado ven lo mismo en la empresa, pero ya se diferencian en permisos y
-nuestro foco en HU-06 (brigadas), HU-07 (mapa de evacuación), HU-09 (enviar alertas) y HU-10 (ver
-quién está a salvo).
+Cada persona tiene una sede: recibe las alertas de esa sede y el mapa abre en ella. Quien no tiene
+sede asignada (por ejemplo, el administrador) recibe las alertas de todas.
 
 ---
 
@@ -162,6 +165,9 @@ quién está a salvo).
 - **Plan de emergencias:** cada sede tiene un plan (`plan_emergencia`) con versiones numeradas
   (`plan_version`). Cada versión está en `borrador` o `aprobado`, y una versión aprobada no se
   modifica.
+- **Tiempo real:** WebSocket en `/ws`. El cliente se autentica con su token en el primer mensaje
+  (nunca en la URL) y solo puede entrar a las salas de su empresa. Así llegan al instante las
+  alertas, las respuestas de los empleados y los cambios del mapa.
 - **Mapas:** Leaflet con mapas de OpenStreetMap. La búsqueda de direcciones (Nominatim) pasa por
   el backend, en fila y con caché, para respetar su política de uso.
 
@@ -177,8 +183,8 @@ cd backend
 npm test
 ```
 
-Son 32 pruebas de integración contra PostgreSQL real, una o más por cada criterio de aceptación de
-HU-01 a HU-05. Cada prueba crea sus propios datos y los borra al terminar.
+Son 57 pruebas de integración contra PostgreSQL real, una o más por cada criterio de aceptación de
+HU-01 a HU-11. Cada prueba crea sus propios datos y los borra al terminar.
 
 ---
 

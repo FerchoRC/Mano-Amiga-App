@@ -13,11 +13,11 @@ export const CONTRASENA_DEMO = 'ManoAmiga2026';
 
 const USUARIOS = [
   { nombre: 'Ana Torres', correo: 'admin@demo.co', rol: 'administrador' },
-  { nombre: 'Carlos Mejía', correo: 'brigadista@demo.co', rol: 'brigadista' },
-  { nombre: 'Sofía Gómez', correo: 'empleado@demo.co', rol: 'empleado' },
-  { nombre: 'Marta Cano', correo: 'marta@demo.co', rol: 'empleado', activo: false },
-  { nombre: 'Laura Gómez', correo: 'laura@demo.co', rol: 'brigadista' },
-  { nombre: 'Diego Vélez', correo: 'diego@demo.co', rol: 'brigadista' },
+  { nombre: 'Carlos Mejía', correo: 'brigadista@demo.co', rol: 'brigadista', sede: 'Planta Itagüí' },
+  { nombre: 'Sofía Gómez', correo: 'empleado@demo.co', rol: 'empleado', sede: 'Planta Itagüí' },
+  { nombre: 'Marta Cano', correo: 'marta@demo.co', rol: 'empleado', activo: false, sede: 'Bodega Sabaneta' },
+  { nombre: 'Laura Gómez', correo: 'laura@demo.co', rol: 'brigadista', sede: 'Planta Itagüí' },
+  { nombre: 'Diego Vélez', correo: 'diego@demo.co', rol: 'brigadista', sede: 'Bodega Sabaneta' },
 ];
 
 // HU-06: Carlos está en dos brigadas; la Planta aún no tiene brigada contra incendios.
@@ -56,6 +56,29 @@ const MAPAS = {
       { nombre: 'Salida oriental', descripcion: 'Por la puerta peatonal hacia la zona verde.', origen: 'Bodega', destino: 'Zona verde lateral', trazado: [[6.15168, -75.61702], [6.1518, -75.6168], [6.15195, -75.61655]] },
     ],
   },
+};
+
+// Fecha AAAA-MM-DD a n días de hoy: así el inventario demo siempre tiene equipos
+// vigentes, por vencer (30 días o menos) y vencidos.
+function enDias(n) {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() + n);
+  return fecha.toLocaleDateString('sv-SE');
+}
+
+// HU-11: inventario de equipos para demostración con estados de vencimiento.
+const EQUIPOS = {
+  'Planta Itagüí': [
+    { tipo: 'extintor', nombre: 'Extintor EXT-01 · Recepción', ubicacion: 'Junto a la puerta de entrada principal', fechaVencimiento: enDias(15), estado: 'operativo', notas: 'Multipropósito ABC 10 lb' },
+    { tipo: 'extintor', nombre: 'Extintor EXT-02 · Bodega', ubicacion: 'Portón de carga y descarga', fechaVencimiento: enDias(180), estado: 'operativo', notas: 'Multipropósito ABC 20 lb' },
+    { tipo: 'botiquin', nombre: 'Botiquín Tipo B · Enfermería', ubicacion: 'Piso 1, consultorio médico', fechaVencimiento: enDias(22), estado: 'operativo', notas: 'Dotación completa según norma' },
+    { tipo: 'camilla', nombre: 'Camilla rígida de emergencia', ubicacion: 'Pasillo central, punto de primeros auxilios', fechaVencimiento: null, estado: 'operativo', notas: 'Con correas e inmovilizador de cuello' },
+    { tipo: 'extintor', nombre: 'Extintor EXT-03 · Cocineta', ubicacion: 'Área de descanso', fechaVencimiento: enDias(-20), estado: 'vencido', notas: 'Requiere recarga urgente' },
+  ],
+  'Bodega Sabaneta': [
+    { tipo: 'extintor', nombre: 'Extintor EXT-01 · Muelle', ubicacion: 'Muelle de carga 1', fechaVencimiento: enDias(90), estado: 'operativo', notas: 'Solkaflam 3700 g' },
+    { tipo: 'botiquin', nombre: 'Botiquín Tipo A · Portería', ubicacion: 'Recepción y control de acceso', fechaVencimiento: enDias(5), estado: 'operativo', notas: 'Revisión mensual realizada' },
+  ],
 };
 
 const SEDES = [
@@ -128,6 +151,13 @@ async function seed() {
         [empresa.id_empresa, sede.nombre, sede.direccion, sede.ciudad, sede.lat, sede.lng]
       );
 
+      // HU-09: cada persona recibe las alertas de su sede; Ana (administradora) no tiene sede y las recibe todas.
+      const deEstaSede = USUARIOS.filter((u) => u.sede === sede.nombre).map((u) => idPorCorreo[u.correo]);
+      await db.query('UPDATE usuario SET id_sede = $1 WHERE id_usuario = ANY($2::uuid[])', [
+        creada.id_sede,
+        deEstaSede,
+      ]);
+
       for (const b of BRIGADAS[sede.nombre] ?? []) {
         const {
           rows: [brigada],
@@ -154,6 +184,14 @@ async function seed() {
           `INSERT INTO mapa_ruta (id_sede, nombre, descripcion, origen, destino, trazado)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [creada.id_sede, r.nombre, r.descripcion, r.origen, r.destino, JSON.stringify(r.trazado)]
+        );
+      }
+
+      for (const eq of EQUIPOS[sede.nombre] ?? []) {
+        await db.query(
+          `INSERT INTO equipo (id_sede, tipo, nombre, ubicacion, fecha_vencimiento, estado, notas)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [creada.id_sede, eq.tipo, eq.nombre, eq.ubicacion, eq.fechaVencimiento, eq.estado, eq.notas]
         );
       }
 

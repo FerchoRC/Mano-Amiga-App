@@ -261,6 +261,13 @@
 
 .cellRole {
   grid-area: role;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sedeSelect {
+  color: var(--text-muted);
 }
 
 .roleSelect {

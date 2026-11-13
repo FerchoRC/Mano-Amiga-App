@@ -1,4 +1,4 @@
-import { BedSingle, BriefcaseMedical, FireExtinguisher, Route, UsersRound } from 'lucide-react';
+import { BedSingle, BriefcaseMedical, DoorOpen, FireExtinguisher, Route, UsersRound } from 'lucide-react';
 
 // Coinciden con el contrato del backend para el mapa de evacuación.
 export const TIPOS_ELEMENTO = [
@@ -14,6 +14,13 @@ export const TIPOS_ELEMENTO = [
     etiqueta: 'Ruta de evacuación',
     plural: 'Rutas de evacuación',
     icono: Route,
+    tono: 'green',
+  },
+  {
+    id: 'salida',
+    etiqueta: 'Salida de emergencia',
+    plural: 'Salidas de emergencia',
+    icono: DoorOpen,
     tono: 'green',
   },
   {
