@@ -197,3 +197,24 @@ CREATE TABLE IF NOT EXISTS equipo (
 );
 
 CREATE INDEX IF NOT EXISTS equipo_sede_idx ON equipo (id_sede);
+
+-- HU-08: la tarjeta menciona salidas de emergencia como punto del mapa.
+ALTER TABLE mapa_punto DROP CONSTRAINT IF EXISTS mapa_punto_tipo_check;
+ALTER TABLE mapa_punto ADD CONSTRAINT mapa_punto_tipo_check
+  CHECK (tipo IN ('punto_encuentro', 'salida', 'extintor', 'botiquin', 'camilla'));
+
+-- HU-09: cada persona pertenece a una sede y recibe las alertas de esa sede.
+-- Quien no tiene sede asignada (p. ej. un administrador general) las recibe todas.
+ALTER TABLE usuario ADD COLUMN IF NOT EXISTS id_sede uuid
+  REFERENCES sede (id_sede) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED;
+CREATE INDEX IF NOT EXISTS usuario_sede_idx ON usuario (id_sede);
+
+-- HU-09: como máximo una alerta activa por sede.
+CREATE UNIQUE INDEX IF NOT EXISTS alerta_una_activa_por_sede ON alerta (id_sede) WHERE activa;
+
+-- Al borrar una empresa, la alerta se alcanza por varias cascadas (empresa, sede,
+-- usuario); revisar estas llaves al final de la transacción evita que choquen.
+ALTER TABLE alerta ALTER CONSTRAINT alerta_id_empresa_fkey DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE alerta ALTER CONSTRAINT alerta_id_sede_fkey DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE alerta ALTER CONSTRAINT alerta_id_usuario_fkey DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE alerta ALTER CONSTRAINT alerta_finalizado_por_fkey DEFERRABLE INITIALLY DEFERRED;

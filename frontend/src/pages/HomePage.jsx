@@ -189,15 +189,19 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const [alerta, setAlerta] = useState(null);
+  const alertaRef = useRef(null);
+  alertaRef.current = alerta;
   const esBrigadistaOAdmin = can(PERMISOS.ALERTAS_ENVIAR) || usuario.rol === 'brigadista' || usuario.rol === 'administrador';
 
-  // HU-09: Cargar alerta activa de la empresa/sede
+  // HU-09: alerta activa que le corresponde a esta persona (la de su sede).
   const cargarAlerta = useCallback(async () => {
     try {
       const res = await api('/api/alertas/activa');
       setAlerta(res.alerta ?? null);
+      return res.alerta ?? null;
     } catch {
-      // Si falla o no hay conexión temporal, no bloquea el home
+      // Si falla o no hay conexión temporal, no bloquea el inicio.
+      return null;
     }
   }, []);
 
@@ -205,16 +209,20 @@ export default function HomePage() {
     cargarAlerta();
   }, [cargarAlerta]);
 
-  // Eventos en tiempo real vía WebSocket
-  const onAlertaNueva = useCallback((data) => {
-    if (data?.alerta) {
-      setAlerta(data.alerta);
-      toast(`¡Alerta de emergencia en ${data.alerta.sedeNombre}!`, { tone: 'error' });
+  // El aviso en tiempo real solo trae identificadores: el servidor decide si la
+  // alerta es para esta persona según su sede.
+  const onAlertaNueva = useCallback(async () => {
+    const nueva = await cargarAlerta();
+    // Quien la envía ya recibió su propia confirmación.
+    if (nueva && nueva.remitenteId !== usuario.id) {
+      toast(`¡Alerta de emergencia en ${nueva.sedeNombre}!`, { tone: 'error' });
     }
-  }, [toast]);
+  }, [cargarAlerta, toast, usuario.id]);
 
   const onAlertaFinalizada = useCallback((data) => {
-    setAlerta((actual) => (actual?.id === data?.alertaId ? null : actual));
+    // Solo avisa si la persona estaba viendo esa alerta (quien la finaliza ya tuvo su aviso).
+    if (alertaRef.current?.id !== data?.alertaId) return;
+    setAlerta(null);
     toast('La emergencia fue dada por finalizada.', { tone: 'info' });
   }, [toast]);
 

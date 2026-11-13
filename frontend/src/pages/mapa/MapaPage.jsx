@@ -1,5 +1,5 @@
 import { MapPinned, Pencil } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAuth } from '../../auth/AuthProvider.jsx';
 import Alert from '../../components/Alert.jsx';
@@ -12,6 +12,7 @@ import { api } from '../../lib/api.js';
 import { TIPOS_ELEMENTO } from '../../lib/mapa.js';
 import { PERMISOS } from '../../lib/roles.js';
 import useSedeSeleccionada from '../../lib/useSedeSeleccionada.js';
+import { useRealtimeEvent } from '../../lib/useRealtime.js';
 import AddPuntoDialog from './AddPuntoDialog.jsx';
 import MapaDetalle from './MapaDetalle.jsx';
 import MapaEditorBar from './MapaEditorBar.jsx';
@@ -22,10 +23,13 @@ import styles from './Mapa.module.css';
 export default function MapaPage() {
   const { can } = useAuth();
   const toast = useToast();
-  const puedeEditar = can(PERMISOS.MAPA_GESTIONAR) || can(PERMISOS.SEDES_GESTIONAR);
+  // HU-08: solo el administrador edita el mapa (el backend también lo exige).
+  const puedeEditar = can(PERMISOS.MAPA_GESTIONAR);
 
   const { sedes, sede, setSedeId, error: errorSedes } = useSedeSeleccionada();
   const [datos, setDatos] = useState(null);
+  const datosRef = useRef(null);
+  datosRef.current = datos;
   const [error, setError] = useState(null);
   const [seleccionado, setSeleccionado] = useState(null);
   const [visibles, setVisibles] = useState(() => new Set(TIPOS_ELEMENTO.map((tipo) => tipo.id)));
@@ -50,6 +54,34 @@ export default function MapaPage() {
       .catch((err) => err.name !== 'AbortError' && setError(err.message));
     return () => controller.abort();
   }, [sede?.id]);
+
+  // Recarga sin perder la selección ni el modo edición; los tipos nuevos se muestran.
+  const sedeId = sede?.id;
+  const recargar = useCallback(() => {
+    if (!sedeId) return;
+    api(`/api/sedes/${sedeId}/mapa`)
+      .then(({ puntos = [], rutas = [] }) => {
+        const antes = new Set((datosRef.current?.puntos ?? []).map((p) => p.tipo));
+        const nuevos = puntos.map((p) => p.tipo).filter((t) => !antes.has(t));
+        if (nuevos.length) setVisibles((v) => new Set([...v, ...nuevos]));
+        setDatos({ puntos, rutas });
+        setSeleccionado((actual) => {
+          if (!actual || actual.clase === 'ruta') return actual;
+          const punto = puntos.find((p) => p.id === actual.id);
+          return punto ? { ...punto, clase: 'punto' } : null;
+        });
+      })
+      .catch(() => {});
+  }, [sedeId]);
+
+  // HU-08: cuando el administrador cambia el mapa, todos lo ven al instante.
+  const onMapaActualizado = useCallback(
+    (data) => {
+      if (data?.sedeId === sedeId) recargar();
+    },
+    [sedeId, recargar]
+  );
+  useRealtimeEvent('mapa:actualizado', onMapaActualizado);
 
   const tiposPresentes = useMemo(() => {
     const present = new Set();
@@ -103,6 +135,7 @@ export default function MapaPage() {
       toast('Ubicación del punto actualizada.');
     } catch (err) {
       toast(err.message, { tone: 'error' });
+      recargar(); // devuelve el punto a su posición guardada
     }
   }
 

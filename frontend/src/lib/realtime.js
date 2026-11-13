@@ -1,55 +1,64 @@
 import { tokenStore } from './api.js';
 
-// Cliente WebSocket nativo para tiempo real (alertas, respuestas de emergencia y futuras extensiones).
+// Cliente WebSocket para tiempo real (alertas, respuestas de emergencia y cambios del mapa).
+// El token no va en la URL: se envía en el primer mensaje y el servidor lo valida
+// como en la API. Las salas se vuelven a pedir después de cada reconexión.
 class RealtimeClient {
   constructor() {
     this.ws = null;
-    this.listeners = new Map(); // event -> Set<callback>
+    this.listeners = new Map(); // evento -> Set<callback>
     this.rooms = new Set();
     this.reconnectTimeout = null;
     this.reconnectAttempts = 0;
-    this.maxReconnectDelay = 5000;
+    this.maxReconnectDelay = 10000;
+    this.autenticado = false;
+    this.detenido = false;
   }
 
   connect() {
+    this.detenido = false;
+    const token = tokenStore.get();
+    if (!token) return;
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
       return;
     }
 
-    const token = tokenStore.get();
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const url = `${protocol}//${host}/ws${token ? `?token=${encodeURIComponent(token)}` : ''}`;
-
     try {
-      this.ws = new WebSocket(url);
+      this.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
     } catch {
       this.scheduleReconnect();
       return;
     }
 
     this.ws.onopen = () => {
-      this.reconnectAttempts = 0;
-      // Re-suscribir a salas activas
-      for (const room of this.rooms) {
-        this.send({ action: 'join', room });
-      }
-      this.emit('connected', {});
+      this.ws.send(JSON.stringify({ action: 'auth', token: tokenStore.get() }));
     };
 
     this.ws.onmessage = (event) => {
+      let payload;
       try {
-        const payload = JSON.parse(event.data);
-        if (payload.event) {
-          this.emit(payload.event, payload.data, payload.room);
-        }
+        payload = JSON.parse(event.data);
       } catch {
-        // Ignorar payload que no sea JSON
+        return;
       }
+      if (payload.event === 'authenticated') {
+        this.autenticado = true;
+        this.reconnectAttempts = 0;
+        for (const room of this.rooms) this.send({ action: 'join', room });
+        this.emit('connected', {});
+        return;
+      }
+      if (payload.event) this.emit(payload.event, payload.data, payload.room);
     };
 
-    this.ws.onclose = () => {
+    this.ws.onclose = (event) => {
+      this.autenticado = false;
+      this.ws = null;
       this.emit('disconnected', {});
+      // 4401: sesión inválida. La app la cerrará en la próxima petición a la API;
+      // reintentar con el mismo token no sirve.
+      if (event.code === 4401 || this.detenido) return;
       this.scheduleReconnect();
     };
 
@@ -59,8 +68,8 @@ class RealtimeClient {
   }
 
   scheduleReconnect() {
-    if (this.reconnectTimeout) return;
-    const delay = Math.min(1000 * Math.pow(1.5, this.reconnectAttempts), this.maxReconnectDelay);
+    if (this.reconnectTimeout || this.detenido) return;
+    const delay = Math.min(1000 * 1.5 ** this.reconnectAttempts, this.maxReconnectDelay);
     this.reconnectAttempts++;
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectTimeout = null;
@@ -69,59 +78,50 @@ class RealtimeClient {
   }
 
   send(data) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(data));
-    }
+    if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(data));
   }
 
   join(room) {
     if (!room) return;
     this.rooms.add(room);
-    this.send({ action: 'join', room });
+    if (this.autenticado) this.send({ action: 'join', room });
   }
 
   leave(room) {
     if (!room) return;
     this.rooms.delete(room);
-    this.send({ action: 'leave', room });
+    if (this.autenticado) this.send({ action: 'leave', room });
   }
 
   on(event, callback) {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set());
-    }
+    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
     this.listeners.get(event).add(callback);
     return () => this.off(event, callback);
   }
 
   off(event, callback) {
-    if (this.listeners.has(event)) {
-      this.listeners.get(event).delete(callback);
-    }
+    this.listeners.get(event)?.delete(callback);
   }
 
   emit(event, data, room) {
-    const list = this.listeners.get(event);
-    if (list) {
-      for (const cb of list) {
-        try {
-          cb(data, room);
-        } catch (err) {
-          console.error(`Error en listener de evento ${event}:`, err);
-        }
+    for (const cb of this.listeners.get(event) ?? []) {
+      try {
+        cb(data, room);
+      } catch (err) {
+        console.error(`Error en listener de evento ${event}:`, err);
       }
     }
   }
 
+  // Al cerrar sesión: se corta la conexión y no se reconecta hasta un nuevo connect().
   disconnect() {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
+    this.detenido = true;
+    clearTimeout(this.reconnectTimeout);
+    this.reconnectTimeout = null;
+    this.rooms.clear();
+    this.autenticado = false;
+    this.ws?.close();
+    this.ws = null;
   }
 }
 

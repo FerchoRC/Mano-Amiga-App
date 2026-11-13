@@ -56,12 +56,7 @@
 }
 
 .alertaButton {
-  animation: pulseButton 2s infinite ease-in-out;
-}
-
-@keyframes pulseButton {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(215 38 61 / 0.5); }
-  50% { box-shadow: 0 0 0 4px rgb(215 38 61 / 0.25); }
+  flex: none;
 }
 
 .who {
@@ -107,6 +102,40 @@
 
 .tab:global(.active) {
   color: var(--blue);
+}
+
+button.tab {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.moreList {
+  display: grid;
+  gap: 4px;
+}
+
+.moreLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  color: var(--navy);
+  font-weight: 500;
+}
+
+.moreLink:hover {
+  text-decoration: none;
+  background: var(--surface-muted);
+}
+
+.moreLink:global(.active) {
+  color: var(--blue);
+  background: var(--blue-50);
 }
 
 @media (min-width: 760px) {

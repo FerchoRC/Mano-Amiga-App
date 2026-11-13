@@ -88,7 +88,27 @@ function RoleSelect({ usuario, onChange, disabled }) {
   );
 }
 
-function UserRow({ usuario, esYo, ocupado, onRol, onAccion }) {
+// HU-09: la sede define qué alertas recibe la persona. Sin sede, recibe las de todas.
+function SedeSelectFila({ usuario, sedes, onChange, disabled }) {
+  return (
+    <select
+      className={`${styles.roleSelect} ${styles.sedeSelect}`}
+      value={usuario.sede?.id ?? ''}
+      onChange={(e) => onChange(e.target.value || null)}
+      disabled={disabled}
+      aria-label={`Sede de ${usuario.nombre}`}
+    >
+      <option value="">Todas las sedes</option>
+      {sedes.map((sede) => (
+        <option key={sede.id} value={sede.id}>
+          {sede.nombre}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function UserRow({ usuario, esYo, ocupado, sedes, onRol, onSede, onAccion }) {
   const acceso =
     usuario.estado === 'pendiente'
       ? 'Aún no ha ingresado'
@@ -129,6 +149,9 @@ function UserRow({ usuario, esYo, ocupado, onRol, onAccion }) {
         ) : (
           <RoleSelect usuario={usuario} onChange={onRol} disabled={ocupado} />
         )}
+        {sedes.length > 0 && (
+          <SedeSelectFila usuario={usuario} sedes={sedes} onChange={onSede} disabled={ocupado} />
+        )}
       </div>
 
       <div className={styles.cellStatus}>
@@ -166,6 +189,7 @@ export default function TeamPage() {
   const toast = useToast();
 
   const [usuarios, setUsuarios] = useState(null);
+  const [sedes, setSedes] = useState([]);
   const [cargaError, setCargaError] = useState(null);
   const [filtroRol, setFiltroRol] = useState('todos');
   const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -190,6 +214,12 @@ export default function TeamPage() {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    api('/api/sedes')
+      .then((res) => setSedes(res.sedes ?? []))
+      .catch(() => {});
+  }, []);
 
   const reemplazar = (actualizado) =>
     setUsuarios((lista) => lista.map((u) => (u.id === actualizado.id ? actualizado : u)));
@@ -228,6 +258,17 @@ export default function TeamPage() {
       return;
     }
     actualizar(usuario, { rol }, `${primerNombre(usuario.nombre)} ahora es ${etiquetaRol(rol).toLowerCase()}.`);
+  };
+
+  const cambiarSede = (usuario, sedeId) => {
+    const sede = sedes.find((s) => s.id === sedeId);
+    actualizar(
+      usuario,
+      { sedeId },
+      sede
+        ? `${primerNombre(usuario.nombre)} quedó en ${sede.nombre}.`
+        : `${primerNombre(usuario.nombre)} recibirá las alertas de todas las sedes.`
+    );
   };
 
   async function onAccion(usuario, tipo) {
@@ -359,7 +400,7 @@ export default function TeamPage() {
 
           <div className={styles.listHead} aria-hidden="true">
             <span>Persona</span>
-            <span>Rol</span>
+            <span>{sedes.length > 0 ? 'Rol y sede' : 'Rol'}</span>
             <span>Estado</span>
             <span>Último acceso</span>
             <span />
@@ -399,7 +440,9 @@ export default function TeamPage() {
                   usuario={usuario}
                   esYo={usuario.id === session.usuario.id}
                   ocupado={ocupados.has(usuario.id)}
+                  sedes={sedes}
                   onRol={(rol) => cambiarRol(usuario, rol)}
+                  onSede={(sedeId) => cambiarSede(usuario, sedeId)}
                   onAccion={(tipo) => onAccion(usuario, tipo)}
                 />
               ))}
@@ -434,6 +477,7 @@ export default function TeamPage() {
 
       <AddPersonDialog
         open={agregarAbierto}
+        sedes={sedes}
         onClose={() => setAgregarAbierto(false)}
         onAdded={(nuevo) => setUsuarios((lista) => [...(lista ?? []), nuevo])}
       />

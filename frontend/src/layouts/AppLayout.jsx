@@ -1,6 +1,7 @@
 import {
   Boxes,
   Building2,
+  Ellipsis,
   House,
   KeyRound,
   LogOut,
@@ -10,32 +11,40 @@ import {
   Users,
 } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { RUTA_CAMBIAR_CONTRASENA } from '../auth/guards.jsx';
+import AlertaGlobal from '../components/AlertaGlobal.jsx';
 import Avatar from '../components/Avatar.jsx';
 import Button from '../components/Button.jsx';
+import Dialog from '../components/Dialog.jsx';
 import Logo from '../components/Logo.jsx';
 import Menu from '../components/Menu.jsx';
 import { useToast } from '../components/Toast.jsx';
+import { tipoEmergencia } from '../lib/alertas.js';
 import { api } from '../lib/api.js';
 import { etiquetaRol, PERMISOS } from '../lib/roles.js';
 import EnviarAlertaDialog from '../pages/alertas/EnviarAlertaDialog.jsx';
 import styles from './AppLayout.module.css';
 
 const NAV = [
-  { to: '/inicio', label: 'Inicio', icon: House, enTabbar: true },
-  { to: '/sedes', label: 'Sedes', icon: Building2, permiso: PERMISOS.SEDES_VER, enTabbar: true },
-  { to: '/brigadas', label: 'Brigadas', icon: ShieldPlus, permiso: PERMISOS.BRIGADAS_VER, enTabbar: true },
-  { to: '/mapa', label: 'Mapa', icon: MapIcon, permiso: PERMISOS.MAPA_VER, enTabbar: true },
-  { to: '/equipos', label: 'Equipos', icon: Boxes, permiso: PERMISOS.EQUIPOS_VER, enTabbar: false },
-  { to: '/equipo', label: 'Equipo', icon: Users, permiso: PERMISOS.USUARIOS_GESTIONAR, enTabbar: true },
+  { to: '/inicio', label: 'Inicio', icon: House },
+  { to: '/mapa', label: 'Mapa', icon: MapIcon, permiso: PERMISOS.MAPA_VER },
+  { to: '/brigadas', label: 'Brigadas', icon: ShieldPlus, permiso: PERMISOS.BRIGADAS_VER },
+  { to: '/sedes', label: 'Sedes', icon: Building2, permiso: PERMISOS.SEDES_VER },
+  // "Inventario" y no "Equipos", para no confundirlo con "Equipo" (las personas).
+  { to: '/equipos', label: 'Inventario', icon: Boxes, permiso: PERMISOS.EQUIPOS_VER },
+  { to: '/equipo', label: 'Equipo', icon: Users, permiso: PERMISOS.USUARIOS_GESTIONAR },
 ];
+
+// En celular caben 5 pestañas: si hay más, las últimas van en "Más".
+const MAX_TABS = 5;
 
 export default function AppLayout() {
   const { session, logout, can } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const { usuario, empresa } = session;
 
@@ -56,7 +65,10 @@ export default function AppLayout() {
     ? []
     : NAV.filter((item) => !item.permiso || can(item.permiso));
 
-  const itemsTabbar = items.filter((item) => item.enTabbar);
+  const hayMas = items.length > MAX_TABS;
+  const itemsTabbar = hayMas ? items.slice(0, MAX_TABS - 1) : items;
+  const itemsMas = hayMas ? items.slice(MAX_TABS - 1) : [];
+  const [masAbierto, setMasAbierto] = useState(false);
 
   const opcionesCuenta = [
     !usuario.debeCambiarContrasena && {
@@ -68,7 +80,7 @@ export default function AppLayout() {
   ].filter(Boolean);
 
   const handleAlertaEnviada = (nuevaAlerta) => {
-    toast(`Alerta de ${nuevaAlerta.tipo} activada en ${nuevaAlerta.sedeNombre}.`, {
+    toast(`Alerta de ${tipoEmergencia(nuevaAlerta.tipo).etiqueta.toLowerCase()} activada en ${nuevaAlerta.sedeNombre}.`, {
       tone: 'error',
     });
     navigate('/inicio');
@@ -125,6 +137,8 @@ export default function AppLayout() {
         </div>
       </header>
 
+      {!usuario.debeCambiarContrasena && <AlertaGlobal />}
+
       <main className={styles.main}>
         <Suspense
           fallback={
@@ -145,8 +159,30 @@ export default function AppLayout() {
               <span>{label}</span>
             </NavLink>
           ))}
+          {hayMas && (
+            <button
+              type="button"
+              className={`${styles.tab} ${itemsMas.some((i) => location.pathname.startsWith(i.to)) ? 'active' : ''}`}
+              onClick={() => setMasAbierto(true)}
+              aria-haspopup="dialog"
+            >
+              <Ellipsis size={20} aria-hidden="true" />
+              <span>Más</span>
+            </button>
+          )}
         </nav>
       )}
+
+      <Dialog open={masAbierto} onClose={() => setMasAbierto(false)} title="Más secciones" size="sm">
+        <nav className={styles.moreList} aria-label="Más secciones">
+          {itemsMas.map(({ to, label, icon: Icon }) => (
+            <NavLink key={to} to={to} className={styles.moreLink} onClick={() => setMasAbierto(false)}>
+              <Icon size={20} aria-hidden="true" />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+      </Dialog>
 
       {alertaDialog && (
         <EnviarAlertaDialog

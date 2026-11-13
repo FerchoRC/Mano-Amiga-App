@@ -2,6 +2,7 @@
 import { Siren } from 'lucide-react';
 import { useState } from 'react';
 
+import { useAuth } from '../../auth/AuthProvider.jsx';
 import Alert from '../../components/Alert.jsx';
 import Button from '../../components/Button.jsx';
 import Dialog from '../../components/Dialog.jsx';
@@ -11,7 +12,12 @@ import { TIPOS_EMERGENCIA, tipoEmergencia } from '../../lib/alertas.js';
 import styles from './EnviarAlertaDialog.module.css';
 
 export default function EnviarAlertaDialog({ open, onClose, sedes = [], onEnviada }) {
-  const [sedeId, setSedeId] = useState(sedes[0]?.id ?? '');
+  const { session } = useAuth();
+  // Por defecto, la sede donde trabaja quien envía la alerta.
+  const [sedeId, setSedeId] = useState(() => {
+    const mia = session?.usuario.sede?.id;
+    return sedes.some((s) => s.id === mia) ? mia : (sedes[0]?.id ?? '');
+  });
   const [tipo, setTipo] = useState('incendio');
   const [instrucciones, setInstrucciones] = useState(
     tipoEmergencia('incendio').instruccionSugerida

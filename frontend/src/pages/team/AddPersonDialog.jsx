@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Alert from '../../components/Alert.jsx';
 import Button from '../../components/Button.jsx';
 import Dialog from '../../components/Dialog.jsx';
-import { TextField } from '../../components/Field.jsx';
+import { SelectField, TextField } from '../../components/Field.jsx';
 import { api } from '../../lib/api.js';
 import { generarContrasena } from '../../lib/password.js';
 import { LISTA_ROLES } from '../../lib/roles.js';
@@ -28,13 +28,14 @@ const vacio = () => ({
   nombre: '',
   correo: '',
   rol: 'empleado',
+  sedeId: '',
   contrasena: generarContrasena(),
   debeCambiar: true,
 });
 
 // HU-03: el administrador agrega personas. Por defecto crea la cuenta con una
 // contraseña que entrega él mismo; también puede enviar un enlace de invitación.
-export default function AddPersonDialog({ open, onClose, onAdded }) {
+export default function AddPersonDialog({ open, sedes = [], onClose, onAdded }) {
   const [modo, setModo] = useState('crear');
   const [datos, setDatos] = useState(vacio);
   const [errores, setErrores] = useState({});
@@ -70,6 +71,7 @@ export default function AddPersonDialog({ open, onClose, onAdded }) {
     if (Object.keys(nuevos).length) return;
 
     const { nombre, correo, rol, contrasena, debeCambiar } = datos;
+    const sedeId = datos.sedeId || null;
     setEnviando(true);
     setError(null);
     try {
@@ -77,11 +79,11 @@ export default function AddPersonDialog({ open, onClose, onAdded }) {
         modo === 'crear'
           ? await api('/api/usuarios', {
               method: 'POST',
-              body: { nombre, correo, rol, contrasena, debeCambiarContrasena: debeCambiar },
+              body: { nombre, correo, rol, sedeId, contrasena, debeCambiarContrasena: debeCambiar },
             })
           : await api('/api/usuarios/invitaciones', {
               method: 'POST',
-              body: { nombre, correo, rol },
+              body: { nombre, correo, rol, sedeId },
             });
       setResultado({ ...res, modo, contrasena, debeCambiar });
       onAdded(res.usuario);
@@ -213,6 +215,23 @@ export default function AddPersonDialog({ open, onClose, onAdded }) {
             );
           })}
         </fieldset>
+
+        {sedes.length > 0 && (
+          <SelectField
+            label="Sede"
+            value={datos.sedeId}
+            onChange={(e) => set('sedeId')(e.target.value)}
+            error={errores.sedeId}
+            hint="Recibirá las alertas de emergencia de esta sede."
+          >
+            <option value="">Todas las sedes</option>
+            {sedes.map((sede) => (
+              <option key={sede.id} value={sede.id}>
+                {sede.nombre} · {sede.ciudad}
+              </option>
+            ))}
+          </SelectField>
+        )}
 
         {modo === 'crear' && (
           <TemporaryPasswordFields

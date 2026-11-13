@@ -2,7 +2,11 @@ import pg from 'pg';
 
 import { env } from './env.js';
 
-const { Pool } = pg;
+const { Pool, types } = pg;
+
+// Las columnas DATE (p. ej. el vencimiento de un equipo) se leen como 'AAAA-MM-DD'.
+// Convertirlas a Date las movería un día según la zona horaria del servidor.
+types.setTypeParser(types.builtins.DATE, (valor) => valor);
 
 export const pool = new Pool({
   connectionString: env.databaseUrl,
