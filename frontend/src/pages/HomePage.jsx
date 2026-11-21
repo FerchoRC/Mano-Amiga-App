@@ -318,6 +318,52 @@ export default function HomePage() {
               <p>{obligacion(empresa.numEmpleados)}</p>
             </div>
           </section>
+
+          {esAdmin && (
+            <section className={styles.card} aria-labelledby="gestion-sg-sst">
+              <h2 id="gestion-sg-sst" className={styles.small}>
+                Auditoría y cumplimiento
+              </h2>
+              <div style={{ display: 'grid', gap: '8px', marginTop: '12px' }}>
+                <Link
+                  to="/cumplimiento"
+                  className={styles.stepAction}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface-muted)',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>Panel de cumplimiento</span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+                <Link
+                  to="/reportes"
+                  className={styles.stepAction}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface-muted)',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>Reporte para auditoría</span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            </section>
+          )}
         </aside>
       </div>
     </div>

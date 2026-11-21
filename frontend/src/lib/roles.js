@@ -15,6 +15,8 @@ export const PERMISOS = {
   ALERTAS_ENVIAR: 'alertas:enviar',
   EQUIPOS_VER: 'equipos:ver',
   EQUIPOS_GESTIONAR: 'equipos:gestionar',
+  REPORTES_VER: 'reportes:ver',
+  CUMPLIMIENTO_VER: 'cumplimiento:ver',
 };
 
 // Descripción de cada rol tal como lo entiende el negocio (documento, sección 07).

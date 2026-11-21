@@ -1,10 +1,12 @@
 import {
   Boxes,
   Building2,
+  FileDown,
   House,
   KeyRound,
   LogOut,
   Map as MapIcon,
+  ShieldCheck,
   ShieldPlus,
   Siren,
   Users,
@@ -30,6 +32,8 @@ const NAV = [
   { to: '/brigadas', label: 'Brigadas', icon: ShieldPlus, permiso: PERMISOS.BRIGADAS_VER, enTabbar: true },
   { to: '/mapa', label: 'Mapa', icon: MapIcon, permiso: PERMISOS.MAPA_VER, enTabbar: true },
   { to: '/equipos', label: 'Equipos', icon: Boxes, permiso: PERMISOS.EQUIPOS_VER, enTabbar: false },
+  { to: '/cumplimiento', label: 'Cumplimiento', icon: ShieldCheck, permiso: PERMISOS.CUMPLIMIENTO_VER, enTabbar: false },
+  { to: '/reportes', label: 'Reportes', icon: FileDown, permiso: PERMISOS.REPORTES_VER, enTabbar: false },
   { to: '/equipo', label: 'Equipo', icon: Users, permiso: PERMISOS.USUARIOS_GESTIONAR, enTabbar: true },
 ];
 

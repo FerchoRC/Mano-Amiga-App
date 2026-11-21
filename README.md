@@ -145,6 +145,8 @@ puede usar.
 | Enviar alertas de emergencia | ✅ | ✅ | |
 | Confirmar estado ante una emergencia | ✅ | ✅ | ✅ |
 | Gestionar inventario de equipos | ✅ | | |
+| Descargar reporte de auditoría en PDF | ✅ | | |
+| Consultar panel de cumplimiento SG-SST | ✅ | | |
 
 Por ahora brigadista y empleado ven lo mismo en la empresa, pero ya se diferencian en permisos y
 nuestro foco en HU-06 (brigadas), HU-07 (mapa de evacuación), HU-09 (enviar alertas) y HU-10 (ver
