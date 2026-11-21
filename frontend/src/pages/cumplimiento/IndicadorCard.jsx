@@ -14,17 +14,15 @@ import {
   Wrench,
   XCircle,
 } from 'lucide-react';
+import Button from '../../components/Button.jsx';
 import styles from './CumplimientoPage.module.css';
 
 const ICONOS = {
   plan_emergencia: FileCheck,
-  plan: FileCheck,
   brigadas: Flame,
   simulacros: BellRing,
   inventario_equipos: Wrench,
-  equipos: Wrench,
   mapa_evacuacion: MapPin,
-  mapa: MapPin,
 };
 
 const SEMAFOROS = {
@@ -57,15 +55,6 @@ export default function IndicadorCard({ indicador, onClick }) {
   return (
     <article
       className={`${styles.card} ${styles[`card_${indicador.estado}`] || ''}`}
-      onClick={() => onClick(indicador)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick(indicador);
-        }
-      }}
-      role="button"
-      tabIndex={0}
       aria-label={`${indicador.titulo}: ${semaforo.label}, ${indicador.porcentaje}%`}
     >
       <header className={styles.cardHeader}>
@@ -82,24 +71,39 @@ export default function IndicadorCard({ indicador, onClick }) {
         <h3 className={styles.cardTitulo}>{indicador.titulo}</h3>
         <p className={styles.cardNorma}>{indicador.norma}</p>
 
-        <div className={styles.progresoWrapper}>
-          <div className={styles.barraFondo}>
-            <div
-              className={`${styles.barraRelleno} ${styles[`barra_${indicador.estado}`] || ''}`}
+        <div className={styles.progresoBloque}>
+          <div className={styles.progresoCabecera}>
+            <span className={styles.porcentajeTexto}>{indicador.porcentaje}%</span>
+            <p className={styles.cardResumen}>{indicador.resumen}</p>
+          </div>
+          <div
+            className={styles.barraFondo}
+            role="progressbar"
+            aria-label={`Progreso de ${indicador.titulo}`}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={indicador.porcentaje}
+          >
+            <span
+              className={styles.barraRelleno}
               style={{ width: `${Math.min(100, Math.max(0, indicador.porcentaje))}%` }}
             />
           </div>
-          <span className={styles.porcentajeTexto}>{indicador.porcentaje}%</span>
         </div>
 
-        <p className={styles.cardResumen}>{indicador.resumen}</p>
       </div>
 
       <footer className={styles.cardFooter}>
-        <span className={styles.btnVerQueFalta}>
-          Ver qué falta
+        <Button
+          variant="ghost"
+          size="sm"
+          className={styles.btnVerQueFalta}
+          onClick={() => onClick(indicador)}
+          aria-label={`Ver qué falta para cumplir ${indicador.titulo}`}
+        >
+          <span>Ver qué falta</span>
           <ChevronRight aria-hidden="true" size={16} />
-        </span>
+        </Button>
       </footer>
     </article>
   );

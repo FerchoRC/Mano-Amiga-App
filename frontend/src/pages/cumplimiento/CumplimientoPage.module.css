@@ -3,440 +3,566 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--espacio-6);
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--espacio-6) var(--espacio-4);
+  gap: 24px;
   width: 100%;
+  max-width: 1200px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 24px var(--gutter) 32px;
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: var(--espacio-2);
+  gap: 16px;
+  min-width: 0;
 }
 
 .headerTop {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--espacio-4);
+  gap: 16px 24px;
+  min-width: 0;
+}
+
+.headerCopy {
+  min-width: 0;
 }
 
 .titulo {
-  font-family: var(--fuente-titulos);
-  font-size: var(--tamano-tit-2);
-  color: var(--texto-principal);
-  margin: 0;
+  font-size: clamp(26px, 4vw, 32px);
+  font-weight: 600;
+  color: var(--navy);
+  margin: 0 0 8px;
 }
 
+.headerCopy .muted,
 .subtitulo {
-  color: var(--texto-secundario);
-  font-size: var(--tamano-texto-md);
-  margin: 0;
-  max-width: 700px;
+  max-width: 62ch;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.headerActions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: none;
+}
+
+.headerActions > * {
+  flex: 1 1 0;
+  width: auto;
 }
 
 /* Banner de resumen global */
 .resumenBanner {
-  background: var(--superficie-panel);
-  border: 1px solid var(--borde-sutil);
-  border-radius: var(--radio-lg);
-  padding: var(--espacio-6);
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--espacio-6);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
-@media (max-width: 680px) {
-  .resumenBanner {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-}
-
-.porcentajeCirculo {
+.resumenPorcentaje {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  border: 6px solid var(--color-primary-500);
-  background: var(--color-primary-50);
-  margin: 0 auto;
+  align-items: flex-start;
+  min-width: 128px;
 }
 
 .porcentajeNumero {
-  font-family: var(--fuente-titulos);
-  font-size: 2.25rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 600;
   line-height: 1;
-  color: var(--color-primary-700);
+  color: var(--navy);
 }
 
 .porcentajeEtiqueta {
-  font-size: var(--tamano-texto-xs);
-  color: var(--texto-secundario);
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 4px;
 }
+
+.nivelCumplido { color: var(--green-700); }
+.nivelEnProgreso { color: var(--orange-700); }
+.nivelCritico { color: var(--red-700); }
 
 .resumenDetalles {
   display: flex;
   flex-direction: column;
-  gap: var(--espacio-3);
+  gap: 12px;
+  min-width: 0;
 }
 
 .resumenTitulo {
-  font-family: var(--fuente-titulos);
-  font-size: var(--tamano-tit-3);
-  color: var(--texto-principal);
   margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
 }
 
 .resumenTexto {
-  color: var(--texto-secundario);
   margin: 0;
-  font-size: var(--tamano-texto-md);
+  color: var(--text-muted);
+  font-size: 14px;
   line-height: 1.5;
 }
 
 .conteoIndicadores {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--espacio-3);
-  margin-top: var(--espacio-2);
+  gap: 8px;
 }
 
 .conteoPill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: var(--radio-full);
-  font-size: var(--tamano-texto-sm);
-  font-weight: 500;
+  gap: 7px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.pillVerde {
-  background: var(--color-exito-50, #ecfdf5);
-  color: var(--color-exito-700, #047857);
-}
+.pillVerde { background: var(--green-50); color: var(--green-700); }
+.pillAmarillo { background: var(--orange-50); color: var(--orange-700); }
+.pillRojo { background: var(--red-50); color: var(--red-700); }
 
-.pillAmarillo {
-  background: var(--color-aviso-50, #fffbeb);
-  color: var(--color-aviso-700, #b45309);
-}
-
-.pillRojo {
-  background: var(--color-error-50, #fef2f2);
-  color: var(--color-error-700, #b91c1c);
-}
-
-/* Grid de indicadores */
-.gridIndicadores {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--espacio-4);
+.resumenProgreso {
   width: 100%;
+  height: 8px;
+  margin-top: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
 }
 
-@media (max-width: 480px) {
-  .gridIndicadores {
-    grid-template-columns: 1fr;
-  }
+.resumenRellenoVerde,
+.resumenRellenoAmarillo,
+.resumenRellenoRojo {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
 }
 
-/* Tarjeta de Indicador */
+.resumenRellenoVerde { background: var(--green); }
+.resumenRellenoAmarillo { background: var(--orange); }
+.resumenRellenoRojo { background: var(--red); }
+
+/* Contenedor de indicadores */
+.gridIndicadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Tarjeta de indicador */
 .card {
-  background: var(--superficie-panel);
-  border: 1px solid var(--borde-sutil);
-  border-radius: var(--radio-lg);
-  padding: var(--espacio-5);
+  --tono: var(--text-muted);
+  --tono-50: var(--surface-muted);
+  --tono-700: var(--text-muted);
+  flex: 1 1 300px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: var(--espacio-4);
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  min-height: 240px;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--tono);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
-.card:hover,
-.card:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  border-color: var(--color-primary-300);
-  outline: none;
-}
-
-.card_rojo {
-  border-left: 4px solid var(--color-error-500, #ef4444);
-}
-
-.card_amarillo {
-  border-left: 4px solid var(--color-aviso-500, #f59e0b);
-}
-
+.cardVerde,
 .card_verde {
-  border-left: 4px solid var(--color-exito-500, #10b981);
+  --tono: var(--green);
+  --tono-50: var(--green-50);
+  --tono-700: var(--green-700);
+}
+
+.cardAmarillo,
+.card_amarillo {
+  --tono: var(--orange);
+  --tono-50: var(--orange-50);
+  --tono-700: var(--orange-700);
+}
+
+.cardRojo,
+.card_rojo {
+  --tono: var(--red);
+  --tono-50: var(--red-50);
+  --tono-700: var(--red-700);
 }
 
 .cardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--espacio-3);
+  gap: 12px;
 }
 
 .iconWrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radio-md);
-  background: var(--color-primary-50);
-  color: var(--color-primary-600);
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  background: var(--tono-50);
+  color: var(--tono);
 }
 
 .cardBody {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: var(--espacio-2);
+  gap: 12px;
+  min-width: 0;
 }
 
 .cardTitulo {
-  font-family: var(--fuente-titulos);
-  font-size: var(--tamano-texto-lg);
-  color: var(--texto-principal);
   margin: 0;
+  color: var(--navy);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .cardNorma {
-  font-size: var(--tamano-texto-xs);
-  color: var(--texto-terciario);
   margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
-.progresoWrapper {
+.progresoBloque {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.progresoCabecera {
   display: flex;
   align-items: center;
-  gap: var(--espacio-3);
-  margin-top: var(--espacio-2);
-}
-
-.barraFondo {
-  flex: 1;
-  height: 8px;
-  background: var(--fondo-suave, #e2e8f0);
-  border-radius: var(--radio-full);
-  overflow: hidden;
-}
-
-.barraRelleno {
-  height: 100%;
-  border-radius: var(--radio-full);
-  transition: width 0.3s ease;
-}
-
-.barra_verde {
-  background: var(--color-exito-500, #10b981);
-}
-
-.barra_amarillo {
-  background: var(--color-aviso-500, #f59e0b);
-}
-
-.barra_rojo {
-  background: var(--color-error-500, #ef4444);
+  gap: 12px;
+  min-width: 0;
 }
 
 .porcentajeTexto {
-  font-size: var(--tamano-texto-sm);
+  flex: none;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 24px;
   font-weight: 600;
-  color: var(--texto-principal);
-  min-width: 38px;
-  text-align: right;
+  line-height: 1;
 }
 
 .cardResumen {
-  font-size: var(--tamano-texto-sm);
-  color: var(--texto-secundario);
+  min-width: 0;
   margin: 0;
-  line-height: 1.4;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.barraFondo {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.barraRelleno {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tono);
 }
 
 .cardFooter {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  border-top: 1px solid var(--borde-sutil);
-  padding-top: var(--espacio-3);
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .btnVerQueFalta {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--tamano-texto-sm);
-  font-weight: 500;
-  color: var(--color-primary-600);
+  margin-left: auto;
+}
+
+@media (min-width: 960px) {
+  .gridIndicadores { gap: 20px; }
 }
 
 /* Badges de semáforo */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 7px;
+  min-height: 28px;
   padding: 4px 10px;
-  border-radius: var(--radio-full);
-  font-size: var(--tamano-texto-xs);
+  border-radius: 999px;
+  font-size: 12px;
   font-weight: 600;
+  line-height: 1;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.04em;
 }
 
 .badgeVerde {
-  background: var(--color-exito-50, #ecfdf5);
-  color: var(--color-exito-700, #047857);
-  border: 1px solid var(--color-exito-200, #a7f3d0);
+  background: var(--green-50);
+  color: var(--green-700);
 }
 
 .badgeAmarillo {
-  background: var(--color-aviso-50, #fffbeb);
-  color: var(--color-aviso-700, #b45309);
-  border: 1px solid var(--color-aviso-200, #fde68a);
+  background: var(--orange-50);
+  color: var(--orange-700);
 }
 
 .badgeRojo {
-  background: var(--color-error-50, #fef2f2);
-  color: var(--color-error-700, #b91c1c);
-  border: 1px solid var(--color-error-200, #fecaca);
+  background: var(--red-50);
+  color: var(--red-700);
 }
 
 .badgeGris {
-  background: var(--fondo-suave, #f1f5f9);
-  color: var(--texto-secundario);
+  background: var(--surface-muted);
+  color: var(--text-muted);
 }
 
 /* Diálogo de Detalle */
 .dialogContenido {
   display: flex;
   flex-direction: column;
-  gap: var(--espacio-5);
-  padding: var(--espacio-2) 0;
+  gap: 20px;
+  min-width: 0;
+}
+
+.dialogIndicadorHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dialogIconWrapper {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.dialogIconVerde {
+  background: var(--green-50);
+  color: var(--green);
+  border-color: var(--green-50);
+}
+
+.dialogIconAmarillo {
+  background: var(--orange-50);
+  color: var(--orange);
+  border-color: var(--orange-50);
+}
+
+.dialogIconRojo {
+  background: var(--red-50);
+  color: var(--red);
+  border-color: var(--red-50);
 }
 
 .dialogHeaderMeta {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--espacio-3);
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .dialogNorma {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--tamano-texto-sm);
-  color: var(--texto-secundario);
-}
-
-.alertaQueFalta {
-  padding: var(--espacio-4);
-  border-radius: var(--radio-md);
   display: flex;
-  flex-direction: column;
-  gap: var(--espacio-1);
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
-.alertaVerde {
-  background: var(--color-exito-50, #ecfdf5);
-  border: 1px solid var(--color-exito-200, #a7f3d0);
-  color: var(--color-exito-900, #064e3b);
+.dialogNorma svg {
+  flex: 0 0 14px;
+  margin-top: 3px;
 }
 
-.alertaPendiente {
-  background: var(--color-aviso-50, #fffbeb);
-  border: 1px solid var(--color-aviso-200, #fde68a);
-  color: var(--color-aviso-900, #78350f);
+.dialogProgreso {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
 }
 
-.alertaTitulo {
-  font-size: var(--tamano-texto-sm);
-}
-
-.alertaTexto {
-  margin: 0;
-  font-size: var(--tamano-texto-md);
-  line-height: 1.45;
+.dialogRelleno {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
 }
 
 .checklistSeccion {
   display: flex;
   flex-direction: column;
-  gap: var(--espacio-3);
+  gap: 12px;
 }
 
 .checklistTitulo {
-  font-family: var(--fuente-titulos);
-  font-size: var(--tamano-texto-md);
-  color: var(--texto-principal);
   margin: 0;
+  color: var(--navy);
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .checkList {
-  list-style: none;
-  padding: 0;
+  display: grid;
+  gap: 8px;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--espacio-2);
+  padding: 0;
+  list-style: none;
 }
 
 .checkItem {
   display: flex;
-  align-items: flex-start;
-  gap: var(--espacio-3);
-  padding: var(--espacio-3);
-  border-radius: var(--radio-md);
-  font-size: var(--tamano-texto-sm);
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
   line-height: 1.4;
 }
 
-.checkItemCumple {
-  background: var(--fondo-suave, #f8fafc);
-  color: var(--texto-principal);
-}
-
-.checkItemPendiente {
-  background: var(--color-aviso-50, #fffbeb);
-  color: var(--texto-principal);
-}
-
 .iconCumple {
-  color: var(--color-exito-600, #059669);
-  flex-shrink: 0;
-  margin-top: 1px;
+  flex: 0 0 20px;
+  color: var(--green);
 }
 
 .iconPendiente {
-  color: var(--color-aviso-600, #d97706);
-  flex-shrink: 0;
-  margin-top: 1px;
+  flex: 0 0 20px;
+  color: var(--orange);
 }
 
 .dialogFooterActions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--espacio-3);
+  gap: 12px;
   width: 100%;
+}
+
+.filtroSede {
+  max-width: 360px;
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .headerTop {
+    flex-direction: column;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .headerActions > * {
+    flex: 1 1 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .container {
+    gap: 20px;
+    padding: 20px var(--gutter) 24px;
+  }
+
+  .headerActions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .headerActions > * {
+    flex: 1 1 0;
+    width: auto;
+  }
+
+  .resumenBanner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .resumenPorcentaje {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .porcentajeNumero {
+    font-size: 48px;
+  }
+
+  .porcentajeEtiqueta {
+    margin-top: 0;
+  }
+
+  .gridIndicadores {
+    gap: 16px;
+  }
+
+  .card {
+    flex-basis: 100%;
+    padding: 20px;
+  }
+
+  .progresoCabecera {
+    align-items: flex-end;
+  }
+
+  .dialogIndicadorHeader {
+    align-items: flex-start;
+  }
+
+  .dialogFooterActions {
+    flex-direction: column-reverse;
+  }
+
+  .dialogFooterActions > * {
+    width: 100%;
+  }
 }

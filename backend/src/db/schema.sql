@@ -197,3 +197,18 @@ CREATE TABLE IF NOT EXISTS equipo (
 );
 
 CREATE INDEX IF NOT EXISTS equipo_sede_idx ON equipo (id_sede);
+
+-- HU-13: Constancia de simulacros de evacuación realizados por sede.
+CREATE TABLE IF NOT EXISTS simulacro (
+  id_simulacro      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_sede           uuid          NOT NULL REFERENCES sede (id_sede) ON DELETE CASCADE,
+  id_usuario        uuid          REFERENCES usuario (id_usuario) ON DELETE SET NULL,
+  fecha             date          NOT NULL,
+  participantes     integer       NOT NULL CHECK (participantes >= 0),
+  tiempo_evacuacion varchar(20),
+  observaciones     text,
+  plan_mejora       text,
+  creado_en         timestamptz   NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS simulacro_sede_fecha_idx ON simulacro (id_sede, fecha DESC);

@@ -129,4 +129,72 @@ router.delete('/puntos/:idPunto', requirePermission(PERMISOS.MAPA_GESTIONAR), as
   res.status(204).end();
 });
 
+// HU-13: Constancia de simulacros realizada desde el mapa de evacuación.
+router.get('/simulacros', async (req, res) => {
+  const sede = await findSede(pool, req.auth.usuario.empresaId, req.params.idSede);
+  const { rows } = await pool.query(
+    `SELECT s.id_simulacro, s.fecha, s.participantes, s.tiempo_evacuacion,
+            s.observaciones, s.plan_mejora, s.creado_en,
+            u.nombre AS registrado_por
+       FROM simulacro s
+       LEFT JOIN usuario u ON u.id_usuario = s.id_usuario
+      WHERE s.id_sede = $1
+      ORDER BY s.fecha DESC, s.creado_en DESC`,
+    [sede.id_sede]
+  );
+
+  res.json({
+    simulacros: rows.map((row) => ({
+      id: row.id_simulacro,
+      fecha: row.fecha.toISOString().slice(0, 10),
+      participantes: row.participantes,
+      tiempoEvacuacion: row.tiempo_evacuacion,
+      observaciones: row.observaciones,
+      planMejora: row.plan_mejora,
+      registradoPor: row.registrado_por,
+      creadoEn: row.creado_en,
+    })),
+  });
+});
+
+router.post('/simulacros', requirePermission(PERMISOS.MAPA_GESTIONAR), async (req, res) => {
+  const sede = await findSede(pool, req.auth.usuario.empresaId, req.params.idSede);
+  const {
+    fecha,
+    participantes,
+    tiempoEvacuacion = null,
+    observaciones = '',
+    planMejora = '',
+  } = req.body;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha || '')) {
+    return res.status(400).json({ error: { codigo: 'DATOS_INVALIDOS', mensaje: 'La fecha del simulacro no es válida.' } });
+  }
+
+  const cantidad = Number(participantes);
+  if (!Number.isInteger(cantidad) || cantidad < 0) {
+    return res.status(400).json({ error: { codigo: 'DATOS_INVALIDOS', mensaje: 'Indica un número válido de participantes.' } });
+  }
+
+  const { rows } = await pool.query(
+    `INSERT INTO simulacro
+       (id_sede, id_usuario, fecha, participantes, tiempo_evacuacion, observaciones, plan_mejora)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id_simulacro, fecha, participantes, tiempo_evacuacion, observaciones, plan_mejora, creado_en`,
+    [sede.id_sede, req.auth.usuario.id, fecha, cantidad, tiempoEvacuacion?.trim() || null, observaciones.trim(), planMejora.trim()]
+  );
+
+  res.status(201).json({
+    simulacro: {
+      id: rows[0].id_simulacro,
+      fecha: rows[0].fecha.toISOString().slice(0, 10),
+      participantes: rows[0].participantes,
+      tiempoEvacuacion: rows[0].tiempo_evacuacion,
+      observaciones: rows[0].observaciones,
+      planMejora: rows[0].plan_mejora,
+      creadoEn: rows[0].creado_en,
+    },
+  });
+});
+
 export default router;

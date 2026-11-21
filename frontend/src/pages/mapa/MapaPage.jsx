@@ -1,10 +1,12 @@
-import { MapPinned, Pencil } from 'lucide-react';
+import { CalendarCheck, MapPinned, Pencil } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 
 import { useAuth } from '../../auth/AuthProvider.jsx';
 import Alert from '../../components/Alert.jsx';
 import Button from '../../components/Button.jsx';
 import Dialog from '../../components/Dialog.jsx';
+import { TextArea, TextField } from '../../components/Field.jsx';
 import SedeSelect from '../../components/SedeSelect.jsx';
 import { useToast } from '../../components/Toast.jsx';
 import EvacuationMap from '../../components/map/EvacuationMap.jsx';
@@ -34,6 +36,17 @@ export default function MapaPage() {
   const [coordenadasNuevo, setCoordenadasNuevo] = useState(null);
   const [puntoAEliminar, setPuntoAEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [dialogSimulacro, setDialogSimulacro] = useState(false);
+  const [simulacros, setSimulacros] = useState([]);
+  const [guardandoSimulacro, setGuardandoSimulacro] = useState(false);
+  const [formSimulacro, setFormSimulacro] = useState(() => ({
+    fecha: new Date().toISOString().slice(0, 10),
+    participantes: '',
+    tiempoEvacuacion: '',
+    observaciones: '',
+    planMejora: '',
+  }));
 
   useEffect(() => {
     if (!sede) return;
@@ -50,6 +63,27 @@ export default function MapaPage() {
       .catch((err) => err.name !== 'AbortError' && setError(err.message));
     return () => controller.abort();
   }, [sede?.id]);
+
+  useEffect(() => {
+    if (!sede) return;
+    const controller = new AbortController();
+    api(`/api/sedes/${sede.id}/mapa/simulacros`, { signal: controller.signal })
+      .then(({ simulacros = [] }) => setSimulacros(simulacros))
+      .catch((err) => err.name !== 'AbortError' && setSimulacros([]));
+    return () => controller.abort();
+  }, [sede?.id]);
+
+  useEffect(() => {
+    if (searchParams.get('registrarSimulacro') === '1' && sede) {
+      setDialogSimulacro(true);
+    }
+  }, [searchParams, sede?.id]);
+
+  useEffect(() => {
+    if (searchParams.get('nuevo') === '1') {
+      setDialogAgregar(true);
+    }
+  }, [searchParams]);
 
   const tiposPresentes = useMemo(() => {
     const present = new Set();
@@ -140,6 +174,41 @@ export default function MapaPage() {
     toast(`${nuevoPunto.nombre} fue agregado al mapa.`);
   };
 
+  async function guardarSimulacro(e) {
+    e.preventDefault();
+    if (!sede) return;
+    if (!formSimulacro.fecha || formSimulacro.participantes === '') {
+      toast('Completa la fecha y el número de participantes.', { tone: 'error' });
+      return;
+    }
+
+    setGuardandoSimulacro(true);
+    try {
+      const res = await api(`/api/sedes/${sede.id}/mapa/simulacros`, {
+        method: 'POST',
+        body: {
+          fecha: formSimulacro.fecha,
+          participantes: Number(formSimulacro.participantes),
+          tiempoEvacuacion: formSimulacro.tiempoEvacuacion,
+          observaciones: formSimulacro.observaciones,
+          planMejora: formSimulacro.planMejora,
+        },
+      });
+      setSimulacros((actual) => [res.simulacro, ...actual]);
+      setDialogSimulacro(false);
+      setSearchParams((actual) => {
+        actual.delete('registrarSimulacro');
+        return actual;
+      });
+      setFormSimulacro((actual) => ({ ...actual, participantes: '', tiempoEvacuacion: '', observaciones: '', planMejora: '' }));
+      toast('Simulacro registrado como evidencia.');
+    } catch (err) {
+      toast(err.message, { tone: 'error' });
+    } finally {
+      setGuardandoSimulacro(false);
+    }
+  }
+
   if (errorSedes) {
     return (
       <div className={styles.page}>
@@ -156,13 +225,22 @@ export default function MapaPage() {
           <p className="muted">Rutas de evacuación, puntos de encuentro y equipos de {sede?.nombre ?? 'la sede'}.</p>
         </div>
         {puedeEditar && sede && (
-          <Button
-            variant={editando ? 'primary' : 'secondary'}
-            icon={Pencil}
-            onClick={() => setEditando((v) => !v)}
-          >
-            {editando ? 'Terminar edición' : 'Editar mapa'}
-          </Button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Button
+              variant="secondary"
+              icon={CalendarCheck}
+              onClick={() => setDialogSimulacro(true)}
+            >
+              Registrar simulacro
+            </Button>
+            <Button
+              variant={editando ? 'primary' : 'secondary'}
+              icon={Pencil}
+              onClick={() => setEditando((v) => !v)}
+            >
+              {editando ? 'Terminar edición' : 'Editar mapa'}
+            </Button>
+          </div>
         )}
       </header>
 
@@ -270,6 +348,72 @@ export default function MapaPage() {
           </>
         }
       />
+
+      {simulacros.length > 0 && (
+        <section className={styles.card} aria-label="Registro de simulacros">
+          <div className={styles.cardHeader}>
+            <h2>Simulacros registrados</h2>
+          </div>
+          <ul className={styles.list}>
+            {simulacros.slice(0, 5).map((simulacro) => (
+              <li key={simulacro.id} className={styles.listButton}>
+                <span className={styles.itemText}>
+                  <strong>{simulacro.fecha}</strong>
+                  <span>{simulacro.participantes} participantes{simulacro.tiempoEvacuacion ? ` · ${simulacro.tiempoEvacuacion}` : ''}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <Dialog
+        open={dialogSimulacro}
+        onClose={() => setDialogSimulacro(false)}
+        title="Registrar simulacro de evacuación"
+        description={`Constancia para ${sede?.nombre || 'la sede seleccionada'}.`}
+        size="md"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDialogSimulacro(false)} disabled={guardandoSimulacro}>Cerrar</Button>
+            <Button type="button" variant="primary" loading={guardandoSimulacro} onClick={guardarSimulacro}>Guardar evidencia</Button>
+          </>
+        }
+      >
+        <form className={styles.simulacroForm} onSubmit={guardarSimulacro}>
+          <TextField
+            label="Fecha del simulacro"
+            type="date"
+            value={formSimulacro.fecha}
+            onChange={(e) => setFormSimulacro((actual) => ({ ...actual, fecha: e.target.value }))}
+          />
+          <TextField
+            label="Participantes"
+            type="number"
+            min="0"
+            value={formSimulacro.participantes}
+            onChange={(e) => setFormSimulacro((actual) => ({ ...actual, participantes: e.target.value }))}
+          />
+          <TextField
+            label="Tiempo de evacuación"
+            placeholder="Ej. 4 minutos 30 segundos"
+            value={formSimulacro.tiempoEvacuacion}
+            onChange={(e) => setFormSimulacro((actual) => ({ ...actual, tiempoEvacuacion: e.target.value }))}
+          />
+          <TextArea
+            label="Observaciones"
+            rows={3}
+            value={formSimulacro.observaciones}
+            onChange={(e) => setFormSimulacro((actual) => ({ ...actual, observaciones: e.target.value }))}
+          />
+          <TextArea
+            label="Plan de mejora"
+            rows={3}
+            value={formSimulacro.planMejora}
+            onChange={(e) => setFormSimulacro((actual) => ({ ...actual, planMejora: e.target.value }))}
+          />
+        </form>
+      </Dialog>
     </div>
   );
 }

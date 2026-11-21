@@ -1,5 +1,6 @@
 // HU-12: Utilidades y generación de reporte de auditoría en PDF.
 import { tokenStore } from './api.js';
+import { generarReportePdf, nombreArchivoReportePdf } from './reportePdf.js';
 
 export const SECCIONES_REPORTE = [
   {
@@ -39,127 +40,193 @@ function escaparPdf(texto = '') {
 /**
  * Genera un archivo PDF 1.4 válido con formato estructurado de auditoría SST.
  */
-function generarPdfLocal({ empresa, sedeNombre, desde, hasta, secciones, resumen }) {
-  const lineas = [];
+async function generarPdfLocal({ empresa, sedeNombre, desde, hasta, secciones, resumen }) {
+  const pdfDoc = await PDFDocument.create();
+
+  // Fuentes
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  const page = pdfDoc.addPage([612, 792]);
+  const { width, height } = page.getSize();
+
+  // Color de fondo
+  page.drawRectangle({
+    x: 0,
+    y: 0,
+    width,
+    height,
+    color: rgb(1, 1, 1),
+  });
+
+  // Encabezado institucional
+  page.drawText('MANOAMIGA - GESTION INTEGRAL DE EMERGENCIAS', {
+    x: 50,
+    y: height - 50,
+    font: fontBold,
+    size: 20,
+    color: rgb(0, 0, 0),
+  });
+
+  page.drawText('Reporte de Auditoria y Cumplimiento SG-SST (Res. 0312 de 2019)', {
+    x: 50,
+    y: height - 75,
+    font: font,
+    size: 12,
+    color: rgb(0, 0, 0),
+  });
+
+  // Línea divisoria
+  page.drawLine({
+    start: { x: 50, y: height - 85 },
+    end: { x: 562, y: height - 85 },
+    color: rgb(0.15, 0.25, 0.45),
+    thickness: 0.5,
+  });
+
+  // Datos de la empresa
+  page.drawText(`EMPRESA: ${empresa?.razonSocial ?? 'Textiles del Aburra S.A.S.'}`, {
+    x: 50,
+    y: height - 110,
+    font: fontBold,
+    size: 11,
+    color: rgb(0, 0, 0),
+  });
+
+  page.drawText(`NIT: ${empresa?.nit ?? '901234567'}  |  SEDE: ${sedeNombre ?? 'Todas las sedes'}`, {
+    x: 50,
+    y: height - 130,
+    font: font,
+    size: 10,
+    color: rgb(0, 0, 0),
+  });
+
+  page.drawText(`PERIODO AUDITADO: Del ${desde || 'Inicio'} al ${hasta || 'Fecha actual'}`, {
+    x: 50,
+    y: height - 145,
+    font: font,
+    size: 10,
+    color: rgb(0, 0, 0),
+  });
+
   const fechaGeneracion = new Date().toLocaleDateString('es-CO', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
-
-  // Instrucciones gráficas y de texto para el stream
-  lineas.push('BT');
-  // Encabezado institucional
-  lineas.push('/F1 20 Tf');
-  lineas.push('50 740 Td');
-  lineas.push(`(${escaparPdf('MANOAMIGA - GESTION INTEGRAL DE EMERGENCIAS')}) Tj`);
-
-  lineas.push('/F2 12 Tf');
-  lineas.push('0 -22 Td');
-  lineas.push(`(${escaparPdf(`Reporte de Auditoria y Cumplimiento SG-SST (Res. 0312 de 2019)`)}) Tj`);
-
-  // Línea divisoria
-  lineas.push('ET');
-  lineas.push('0.15 0.25 0.45 RG');
-  lineas.push('2 w');
-  lineas.push('50 705 m 562 705 l S');
-
-  lineas.push('BT');
-  // Datos de la empresa
-  lineas.push('/F1 11 Tf');
-  lineas.push('50 680 Td');
-  lineas.push(`(${escaparPdf(`EMPRESA: ${empresa?.razonSocial ?? 'Textiles del Aburra S.A.S.'}`)}) Tj`);
-
-  lineas.push('/F2 10 Tf');
-  lineas.push('0 -16 Td');
-  lineas.push(`(${escaparPdf(`NIT: ${empresa?.nit ?? '901234567'}  |  SEDE: ${sedeNombre ?? 'Todas las sedes'}`)}) Tj`);
-
-  lineas.push('0 -15 Td');
-  lineas.push(`(${escaparPdf(`PERIODO AUDITADO: Del ${desde || 'Inicio'} al ${hasta || 'Fecha actual'}`)}) Tj`);
-
-  lineas.push('0 -15 Td');
-  lineas.push(`(${escaparPdf(`FECHA DE EMISION: ${fechaGeneracion}`)}) Tj`);
+  page.drawText(`FECHA DE EMISION: ${fechaGeneracion}`, {
+    x: 50,
+    y: height - 160,
+    font: font,
+    size: 10,
+    color: rgb(0, 0, 0),
+  });
 
   // Bloque de resumen ejecutivo
-  lineas.push('/F1 13 Tf');
-  lineas.push('0 -32 Td');
-  lineas.push(`(${escaparPdf('1. RESUMEN EJECUTIVO DE CUMPLIMIENTO')}) Tj`);
+  page.drawText('1. RESUMEN EJECUTIVO DE CUMPLIMIENTO', {
+    x: 50,
+    y: height - 190,
+    font: fontBold,
+    size: 13,
+    color: rgb(0, 0, 0),
+  });
 
-  lineas.push('/F2 10 Tf');
-  lineas.push('0 -18 Td');
-  lineas.push(`(${escaparPdf(`- Sedes auditadas: ${resumen?.totalSedes ?? 3}`)}) Tj`);
-  lineas.push('0 -15 Td');
-  lineas.push(`(${escaparPdf(`- Planes de emergencia aprobados: ${resumen?.planesAprobados ?? 1} de ${resumen?.totalSedes ?? 3}`)}) Tj`);
-  lineas.push('0 -15 Td');
-  lineas.push(`(${escaparPdf(`- Brigadas de emergencia conformadas: ${resumen?.totalBrigadas ?? 3} en operacion`)}) Tj`);
-  lineas.push('0 -15 Td');
-  lineas.push(`(${escaparPdf(`- Equipos de emergencia inspeccionados: ${resumen?.totalEquipos ?? 7} registrados`)}) Tj`);
+  page.drawText(`- Sedes auditadas: ${resumen?.totalSedes ?? 3}`, {
+    x: 50,
+    y: height - 210,
+    font: font,
+    size: 10,
+    color: rgb(0, 0, 0),
+  });
+  page.drawText(`- Planes de emergencia aprobados: ${resumen?.planesAprobados ?? 1} de ${resumen?.totalSedes ?? 3}`, {
+    x: 50,
+    y: height - 225,
+    font: font,
+    size: 10,
+    color: rgb(0, 0, 0),
+  });
+  page.drawText(`- Brigadas de emergencia conformadas: ${resumen?.totalBrigadas ?? 3} en operacion`, {
+    x: 50,
+    y: height - 240,
+    font: font,
+    size: 10,
+    color: rgb(0, 0, 0),
+  });
+  page.drawText(`- Equipos de emergencia inspeccionados: ${resumen?.totalEquipos ?? 7} registrados`, {
+    x: 50,
+    y: height - 255,
+    font: font,
+    size: 10,
+    color: rgb(0, 0, 0),
+  });
 
   // Secciones seleccionadas para la auditoría
-  lineas.push('/F1 13 Tf');
-  lineas.push('0 -32 Td');
-  lineas.push(`(${escaparPdf('2. SECCIONES Y EVIDENCIAS DOCUMENTALES ADJUNTAS')}) Tj`);
+  page.drawText('2. SECCIONES Y EVIDENCIAS DOCUMENTALES ADJUNTAS', {
+    x: 50,
+    y: height - 290,
+    font: fontBold,
+    size: 13,
+    color: rgb(0, 0, 0),
+  });
 
-  lineas.push('/F2 10 Tf');
   let offset = -20;
   for (const s of SECCIONES_REPORTE) {
     const incluida = secciones.includes(s.id);
-    lineas.push(`0 ${offset} Td`);
     const estado = incluida ? '[X] EVIDENCIA INCLUIDA' : '[ ] NO REQUERIDA EN ESTA FECHA';
-    lineas.push(`(${escaparPdf(`${estado}: ${s.label}`)}) Tj`);
-    offset = -15;
+    page.drawText(`${estado}: ${s.label}`, {
+      x: 50,
+      y: height - 310 + offset,
+      font: font,
+      size: 10,
+      color: rgb(0, 0, 0),
+    });
+    offset += -15;
   }
 
   // Constancia y firma legal
-  lineas.push('/F1 11 Tf');
-  lineas.push('0 -42 Td');
-  lineas.push(`(${escaparPdf('3. DECLARACION DE CONFORMIDAD')}) Tj`);
+  page.drawText('3. DECLARACION DE CONFORMIDAD', {
+    x: 50,
+    y: height - 370,
+    font: fontBold,
+    size: 11,
+    color: rgb(0, 0, 0),
+  });
 
-  lineas.push('/F2 9 Tf');
-  lineas.push('0 -16 Td');
-  lineas.push(`(${escaparPdf('El presente reporte consolida los registros del Sistema de Gestion de la Seguridad y Salud en')}) Tj`);
-  lineas.push('0 -13 Td');
-  lineas.push(`(${escaparPdf('el Trabajo de la organizacion, con validez para visitas del Ministerio del Trabajo y la ARL.')}) Tj`);
+  page.drawText('El presente reporte consolida los registros del Sistema de Gestion de la Seguridad y Salud en', {
+    x: 50,
+    y: height - 390,
+    font: font,
+    size: 9,
+    color: rgb(0, 0, 0),
+  });
+  page.drawText('el Trabajo de la organizacion, con validez para visitas del Ministerio del Trabajo y la ARL.', {
+    x: 50,
+    y: height - 405,
+    font: font,
+    size: 9,
+    color: rgb(0, 0, 0),
+  });
 
-  lineas.push('0 -48 Td');
-  lineas.push(`(${escaparPdf('____________________________________              ____________________________________')}) Tj`);
-  lineas.push('0 -14 Td');
-  lineas.push(`(${escaparPdf('Responsable SG-SST (Licencia Vigente)             Representante Legal / Gerencia')}) Tj`);
+  // Firmas
+  const firmaY = height - 450;
+  page.drawText('____________________________________              ____________________________________', {
+    x: 50,
+    y: firmaY,
+    font: font,
+    size: 9,
+    color: rgb(0, 0, 0),
+  });
+  page.drawText('Responsable SG-SST (Licencia Vigente)             Representante Legal / Gerencia', {
+    x: 50,
+    y: firmaY - 15,
+    font: font,
+    size: 9,
+    color: rgb(0, 0, 0),
+  });
 
-  lineas.push('ET');
-
-  const streamContent = lineas.join('\n');
-  const streamLength = streamContent.length;
-
-  const pdfParts = [
-    '%PDF-1.4\n',
-    '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
-    '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
-    '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>\nendobj\n',
-    '4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n',
-    '5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n',
-    `6 0 obj\n<< /Length ${streamLength} >>\nstream\n${streamContent}\nendstream\nendobj\n`,
-  ];
-
-  // Cálculo de offsets para la tabla xref
-  let currentOffset = 0;
-  const offsets = [0];
-  for (const part of pdfParts) {
-    currentOffset += part.length;
-    offsets.push(currentOffset);
-  }
-
-  const xrefStart = currentOffset;
-  let xref = 'xref\n0 7\n0000000000 65535 f \n';
-  for (let i = 0; i < 6; i++) {
-    const o = String(offsets[i]).padStart(10, '0');
-    xref += `${o} 00000 n \n`;
-  }
-
-  const trailer = `trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  const pdfCompleto = pdfParts.join('') + xref + trailer;
-
-  return new Blob([pdfCompleto], { type: 'application/pdf' });
+  // Serialización a PDF
+  const pdfBytes = await pdfDoc.save();
+  return new Blob([pdfBytes], { type: 'application/pdf' });
 }
 
 /**
@@ -183,7 +250,7 @@ export async function descargarReporteAuditoria({
   if (hasta) query.set('hasta', hasta);
   if (secciones.length) query.set('secciones', secciones.join(','));
 
-  const nombreArchivo = `Reporte-Auditoria-SST-${new Date().toISOString().slice(0, 10)}.pdf`;
+  const nombreArchivo = nombreArchivoReportePdf(empresa);
 
   try {
     // TODO(back): El endpoint GET /api/reportes/auditoria generará el PDF final en el servidor.
@@ -201,7 +268,7 @@ export async function descargarReporteAuditoria({
   }
 
   // Generación directa y garantizada de PDF para el cliente
-  const blob = generarPdfLocal({
+  const blob = await generarReportePdf({
     empresa,
     sedeNombre,
     desde,

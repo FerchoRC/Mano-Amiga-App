@@ -37,10 +37,7 @@ export function diasParaVencer(fechaStr) {
   if (!fechaStr) return null;
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
-  const limpio = String(fechaStr).split('T')[0];
-  const [año, mes, dia] = limpio.split('-').map(Number);
-  if (!año || !mes || !dia) return null;
-  const fecha = new Date(año, mes - 1, dia);
+  const fecha = new Date(fechaStr + 'T00:00:00');
   const diferenciaMs = fecha.getTime() - hoy.getTime();
   return Math.round(diferenciaMs / (1000 * 60 * 60 * 24));
 }

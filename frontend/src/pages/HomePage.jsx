@@ -1,9 +1,8 @@
-import { ArrowRight, BellRing, Check, FileDown, Scale, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BellRing, Check, FileText, Scale, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/AuthProvider.jsx';
-import Button from '../components/Button.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { api } from '../lib/api.js';
 import { fechaCorta, fechaLarga, formatearNumero, primerNombre, saludo } from '../lib/format.js';
@@ -325,48 +324,27 @@ export default function HomePage() {
               <h2 id="gestion-sg-sst" className={styles.small}>
                 Auditoría y cumplimiento
               </h2>
-              <p className="muted" style={{ fontSize: '14px', margin: '6px 0 16px' }}>
-                Revisa el estado normativo y descarga reportes para el SG-SST.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-                <Button
+              <div className={styles.auditoriaActions}>
+                <Link
                   to="/cumplimiento"
-                  variant="secondary"
-                  block
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0 16px',
-                    textAlign: 'left',
-                  }}
+                  className={styles.auditoriaAction}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                  <span className={styles.auditoriaActionLabel}>
                     <ShieldCheck size={18} aria-hidden="true" />
                     <span>Panel de cumplimiento</span>
                   </span>
                   <ArrowRight size={16} aria-hidden="true" />
-                </Button>
-                <Button
+                </Link>
+                <Link
                   to="/reportes"
-                  variant="secondary"
-                  block
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0 16px',
-                    textAlign: 'left',
-                  }}
+                  className={styles.auditoriaAction}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-                    <FileDown size={18} aria-hidden="true" />
+                  <span className={styles.auditoriaActionLabel}>
+                    <FileText size={18} aria-hidden="true" />
                     <span>Reporte para auditoría</span>
                   </span>
                   <ArrowRight size={16} aria-hidden="true" />
-                </Button>
+                </Link>
               </div>
             </section>
           )}

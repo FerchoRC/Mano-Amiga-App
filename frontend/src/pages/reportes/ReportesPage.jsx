@@ -19,6 +19,7 @@ import { Checkbox, SelectField, TextField } from '../../components/Field.jsx';
 import { useToast } from '../../components/Toast.jsx';
 import { api } from '../../lib/api.js';
 import { descargarReporteAuditoria, SECCIONES_REPORTE } from '../../lib/reportes.js';
+import { obtenerDatosCumplimiento } from '../../lib/cumplimiento.js';
 import styles from './ReportesPage.module.css';
 
 export default function ReportesPage() {
@@ -53,21 +54,49 @@ export default function ReportesPage() {
       const listaSedes = resSedes.sedes ?? [];
       setSedes(listaSedes);
 
+      const equiposPorSede = await Promise.all(
+        listaSedes.map((sede) =>
+          api(`/api/sedes/${sede.id}/equipos`).catch(() => ({ equipos: [] }))
+        )
+      );
+      const totalEquipos = equiposPorSede.reduce(
+        (total, resultado) => total + (resultado.equipos?.length ?? 0),
+        0
+      );
+
       const planesAprobados = listaSedes.filter(
         (s) => s.plan?.estado === 'aprobado'
       ).length;
+
+      const cumplimientoData = await obtenerDatosCumplimiento({
+        sedeId: sedeId || null,
+      });
+
+      const indicadorBrigadas = cumplimientoData.indicadores?.find((item) => item.id === 'brigadas');
+      const brigadasTexto = indicadorBrigadas?.resumen || '';
+      const porcentajeGlobal = cumplimientoData.porcentajeGlobal;
+      const nivel = porcentajeGlobal >= 85
+        ? 'Nivel de cumplimiento óptimo'
+        : porcentajeGlobal >= 60
+          ? 'Cumplimiento aceptable con planes de acción pendientes'
+          : 'Nivel crítico: requiere atención prioritaria';
 
       setResumen({
         totalSedes: listaSedes.length,
         planesAprobados,
         totalBrigadas: (resBrigadas.brigadas ?? []).length,
+        brigadasTexto,
+        totalEquipos,
+        porcentajeGlobal,
+        nivel,
+        indicadores: cumplimientoData.indicadores,
       });
     } catch (err) {
       setError(err.message);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [sedeId]);
 
   useEffect(() => {
     cargarDatos();
@@ -91,6 +120,15 @@ export default function ReportesPage() {
 
     setDescargando(true);
     try {
+      const cumplimientoData = await obtenerDatosCumplimiento({ sedeId: sedeId || null });
+      const porcentajeGlobal = cumplimientoData.porcentajeGlobal;
+      const nivel = porcentajeGlobal >= 85
+        ? 'Nivel de cumplimiento óptimo'
+        : porcentajeGlobal >= 60
+          ? 'Cumplimiento aceptable con planes de acción pendientes'
+          : 'Nivel crítico: requiere atención prioritaria';
+      const indicadorBrigadas = cumplimientoData.indicadores?.find((item) => item.id === 'brigadas');
+
       await descargarReporteAuditoria({
         sedeId,
         desde,
@@ -98,7 +136,13 @@ export default function ReportesPage() {
         secciones,
         empresa,
         sedeNombre,
-        resumen,
+        resumen: {
+          ...resumen,
+          porcentajeGlobal,
+          nivel,
+          brigadasTexto: indicadorBrigadas?.resumen || resumen?.brigadasTexto,
+          indicadores: cumplimientoData.indicadores,
+        },
       });
       toast('Reporte de auditoría descargado en PDF.');
     } catch (err) {
@@ -140,6 +184,7 @@ export default function ReportesPage() {
             <div className={styles.fieldGroup}>
               <SelectField
                 label="Sede a auditar"
+                className={styles.sedeSelect}
                 value={sedeId}
                 onChange={(e) => setSedeId(e.target.value)}
               >
@@ -155,12 +200,14 @@ export default function ReportesPage() {
             <div className={styles.datesGrid}>
               <TextField
                 label="Fecha inicial"
+                className={styles.dateInput}
                 type="date"
                 value={desde}
                 onChange={(e) => setDesde(e.target.value)}
               />
               <TextField
                 label="Fecha de corte"
+                className={styles.dateInput}
                 type="date"
                 value={hasta}
                 onChange={(e) => setHasta(e.target.value)}
@@ -235,6 +282,12 @@ export default function ReportesPage() {
                 <dt>Secciones activas</dt>
                 <dd>
                   <span className={styles.badge}>{secciones.length} de {SECCIONES_REPORTE.length}</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Equipos registrados</dt>
+                <dd>
+                  <span className={styles.badge}>{resumen?.totalEquipos || 0}</span>
                 </dd>
               </div>
             </dl>

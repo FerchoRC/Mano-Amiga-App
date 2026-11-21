@@ -218,6 +218,58 @@
   color: var(--navy);
 }
 
+.sedeSelect {
+  height: 48px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.sedeSelect:hover:not(:disabled) {
+  border-color: var(--blue);
+}
+
+.sedeSelect:focus-visible {
+  border-color: var(--blue);
+  box-shadow: var(--focus-ring);
+}
+
+.dateInput {
+  height: 48px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  color-scheme: light;
+}
+
+.dateInput:hover:not(:disabled) {
+  border-color: var(--blue);
+}
+
+.dateInput:focus-visible {
+  border-color: var(--blue);
+  box-shadow: var(--focus-ring);
+}
+
+.dateInput::-webkit-calendar-picker-indicator {
+  width: 18px;
+  height: 18px;
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.dateInput::-webkit-calendar-picker-indicator:hover {
+  background: var(--blue-50);
+  opacity: 1;
+}
+
 @media (max-width: 559px) {
   .card,
   .cardPreview {

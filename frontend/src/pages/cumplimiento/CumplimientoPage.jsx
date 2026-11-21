@@ -2,16 +2,17 @@
 // Como administrador, quiero ver un panel con el nivel de cumplimiento de mi empresa
 // (plan aprobado, simulacros hechos, equipos al día) para saber qué me falta.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
   Download,
+  FileCheck2,
   RefreshCw,
   XCircle,
 } from 'lucide-react';
-import Alert from '../../components/Alert.jsx';
 import Button from '../../components/Button.jsx';
+import FullScreenStatus from '../../components/FullScreenStatus.jsx';
 import { SelectField } from '../../components/Field.jsx';
 import { useToast } from '../../components/Toast.jsx';
 import { api } from '../../lib/api.js';
@@ -36,9 +37,9 @@ export default function CumplimientoPage() {
       try {
         const data = await api('/api/sedes');
         if (!cancelado) {
-          setSedes(Array.isArray(data?.sedes) ? data.sedes : []);
+          setSedes(Array.isArray(data) ? data : data?.sedes || []);
         }
-      } catch {
+      } catch (err) {
         // Silencioso; se maneja en la carga principal
       }
     }
@@ -49,7 +50,7 @@ export default function CumplimientoPage() {
   }, []);
 
   // Cargar indicadores de cumplimiento
-  const cargarCumplimiento = useCallback(async () => {
+  const cargarCumplimiento = async () => {
     setCargando(true);
     setError(null);
     try {
@@ -58,46 +59,36 @@ export default function CumplimientoPage() {
       });
       setDatos(res);
     } catch (err) {
-      const msg = err?.message || 'No fue posible cargar el panel de cumplimiento';
-      setError(msg);
-      toast(msg, { tone: 'error' });
+      setError(err.message || 'No fue posible cargar el panel de cumplimiento');
+      toast.show({
+        type: 'error',
+        message: 'Error al consultar indicadores de cumplimiento',
+      });
     } finally {
       setCargando(false);
     }
-  }, [sedeSeleccionada, toast]);
+  };
 
   useEffect(() => {
     cargarCumplimiento();
-  }, [cargarCumplimiento]);
+  }, [sedeSeleccionada]);
 
   if (cargando && !datos) {
-    return (
-      <div className={styles.container}>
-        <div style={{ display: 'grid', placeItems: 'center', padding: '80px 0', gap: '16px' }}>
-          <span className="spinner" style={{ fontSize: '24px' }} aria-hidden="true" />
-          <p style={{ color: 'var(--texto-secundario)', margin: 0 }}>
-            Evaluando cumplimiento del estándar SG-SST...
-          </p>
-        </div>
-      </div>
-    );
+    return <FullScreenStatus status="loading" title="Evaluando cumplimiento..." />;
   }
 
   if (error && !datos) {
     return (
-      <div className={styles.container}>
-        <Alert tone="error">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <strong>Error al cargar el panel de cumplimiento</strong>
-            <p style={{ margin: 0 }}>{error}</p>
-            <div style={{ marginTop: '8px' }}>
-              <Button variant="secondary" size="sm" onClick={cargarCumplimiento}>
-                Reintentar
-              </Button>
-            </div>
-          </div>
-        </Alert>
-      </div>
+      <FullScreenStatus
+        status="error"
+        title="Error al cargar el panel"
+        description={error}
+        action={
+          <Button variant="primary" onClick={cargarCumplimiento}>
+            Reintentar
+          </Button>
+        }
+      />
     );
   }
 
@@ -106,21 +97,29 @@ export default function CumplimientoPage() {
   const enProgreso = indicadores.filter((i) => i.estado === 'amarillo').length;
   const criticos = indicadores.filter((i) => i.estado === 'rojo').length;
 
+  const nivelResumen =
+    porcentajeGlobal >= 85
+      ? { titulo: 'Nivel de cumplimiento óptimo', clase: styles.nivelCumplido }
+      : porcentajeGlobal >= 60
+        ? { titulo: 'Cumplimiento aceptable con planes de acción pendientes', clase: styles.nivelEnProgreso }
+        : { titulo: 'Nivel crítico: requiere atención prioritaria', clase: styles.nivelCritico };
+
   return (
     <div className={styles.container}>
       {/* Encabezado */}
       <header className={styles.header}>
         <div className={styles.headerTop}>
-          <div>
+          <div className={styles.headerCopy}>
             <h1 className={styles.titulo}>Panel de cumplimiento</h1>
-            <p className={styles.subtitulo}>
+            <p className="muted">
               Monitoreo del estándar de emergencias SG-SST (Resolución 0312 de 2019 y Decreto 1072 de 2015).
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 'var(--espacio-2)', flexWrap: 'wrap' }}>
+          <div className={styles.headerActions}>
             <Button
               variant="secondary"
+              size="sm"
               icon={RefreshCw}
               onClick={cargarCumplimiento}
               loading={cargando}
@@ -130,6 +129,7 @@ export default function CumplimientoPage() {
             <Button
               to="/reportes"
               variant="primary"
+              size="sm"
               icon={Download}
             >
               Reporte para auditoría
@@ -138,13 +138,14 @@ export default function CumplimientoPage() {
         </div>
 
         {/* Filtro por sede */}
-        <div style={{ maxWidth: '320px', marginTop: 'var(--espacio-3)' }}>
+        <div className={styles.filtroSede}>
           <SelectField
             label="Filtrar por sede"
+            hint="Consolida los indicadores de las sedes seleccionadas."
             value={sedeSeleccionada}
             onChange={(e) => setSedeSeleccionada(e.target.value)}
           >
-            <option value="">Todas las sedes (consolidado empresa)</option>
+            <option value="">Todas las sedes</option>
             {sedes.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.nombre}
@@ -156,19 +157,13 @@ export default function CumplimientoPage() {
 
       {/* Resumen general */}
       <section className={styles.resumenBanner} aria-label="Resumen general de cumplimiento">
-        <div className={styles.porcentajeCirculo}>
-          <span className={styles.porcentajeNumero}>{porcentajeGlobal}%</span>
+        <div className={styles.resumenPorcentaje}>
+          <span className={`${styles.porcentajeNumero} ${nivelResumen.clase}`}>{porcentajeGlobal}%</span>
           <span className={styles.porcentajeEtiqueta}>Cumplimiento</span>
         </div>
 
         <div className={styles.resumenDetalles}>
-          <h2 className={styles.resumenTitulo}>
-            {porcentajeGlobal >= 85
-              ? 'Nivel de cumplimiento óptimo'
-              : porcentajeGlobal >= 60
-              ? 'Cumplimiento aceptable con planes de acción pendientes'
-              : 'Nivel crítico: requiere atención prioritaria'}
-          </h2>
+          <h2 className={`${styles.resumenTitulo} ${nivelResumen.clase}`}>{nivelResumen.titulo}</h2>
           <p className={styles.resumenTexto}>
             Tienes {indicadores.length} indicadores evaluados frente a la normativa colombiana de
             preparación ante emergencias y desastres.
@@ -187,6 +182,24 @@ export default function CumplimientoPage() {
               <XCircle aria-hidden="true" size={15} />
               {criticos} {criticos === 1 ? 'crítico' : 'críticos'}
             </span>
+          </div>
+
+          <div
+            className={styles.resumenProgreso}
+            role="progressbar"
+            aria-label="Porcentaje global de cumplimiento"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={porcentajeGlobal}
+          >
+            <span
+              className={nivelResumen.clase === styles.nivelCumplido
+                ? styles.resumenRellenoVerde
+                : nivelResumen.clase === styles.nivelEnProgreso
+                  ? styles.resumenRellenoAmarillo
+                  : styles.resumenRellenoRojo}
+              style={{ width: `${Math.min(100, Math.max(0, porcentajeGlobal))}%` }}
+            />
           </div>
         </div>
       </section>
