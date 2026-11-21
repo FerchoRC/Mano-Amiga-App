@@ -2,16 +2,17 @@
 // Como administrador, quiero ver un panel con el nivel de cumplimiento de mi empresa
 // (plan aprobado, simulacros hechos, equipos al día) para saber qué me falta.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
   Download,
+  FileCheck2,
   RefreshCw,
   XCircle,
 } from 'lucide-react';
-import Alert from '../../components/Alert.jsx';
 import Button from '../../components/Button.jsx';
+import FullScreenStatus from '../../components/FullScreenStatus.jsx';
 import { SelectField } from '../../components/Field.jsx';
 import { useToast } from '../../components/Toast.jsx';
 import { api } from '../../lib/api.js';
@@ -34,11 +35,11 @@ export default function CumplimientoPage() {
     let cancelado = false;
     async function cargarSedes() {
       try {
-        const data = await api('/api/sedes');
+        const data = await api('/sedes');
         if (!cancelado) {
-          setSedes(Array.isArray(data?.sedes) ? data.sedes : []);
+          setSedes(Array.isArray(data) ? data : data?.sedes || []);
         }
-      } catch {
+      } catch (err) {
         // Silencioso; se maneja en la carga principal
       }
     }
@@ -49,7 +50,7 @@ export default function CumplimientoPage() {
   }, []);
 
   // Cargar indicadores de cumplimiento
-  const cargarCumplimiento = useCallback(async () => {
+  const cargarCumplimiento = async () => {
     setCargando(true);
     setError(null);
     try {
@@ -58,46 +59,36 @@ export default function CumplimientoPage() {
       });
       setDatos(res);
     } catch (err) {
-      const msg = err?.message || 'No fue posible cargar el panel de cumplimiento';
-      setError(msg);
-      toast(msg, { tone: 'error' });
+      setError(err.message || 'No fue posible cargar el panel de cumplimiento');
+      toast.show({
+        type: 'error',
+        message: 'Error al consultar indicadores de cumplimiento',
+      });
     } finally {
       setCargando(false);
     }
-  }, [sedeSeleccionada, toast]);
+  };
 
   useEffect(() => {
     cargarCumplimiento();
-  }, [cargarCumplimiento]);
+  }, [sedeSeleccionada]);
 
   if (cargando && !datos) {
-    return (
-      <div className={styles.container}>
-        <div style={{ display: 'grid', placeItems: 'center', padding: '80px 0', gap: '16px' }}>
-          <span className="spinner" style={{ fontSize: '24px' }} aria-hidden="true" />
-          <p style={{ color: 'var(--texto-secundario)', margin: 0 }}>
-            Evaluando cumplimiento del estándar SG-SST...
-          </p>
-        </div>
-      </div>
-    );
+    return <FullScreenStatus status="loading" title="Evaluando cumplimiento..." />;
   }
 
   if (error && !datos) {
     return (
-      <div className={styles.container}>
-        <Alert tone="error">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <strong>Error al cargar el panel de cumplimiento</strong>
-            <p style={{ margin: 0 }}>{error}</p>
-            <div style={{ marginTop: '8px' }}>
-              <Button variant="secondary" size="sm" onClick={cargarCumplimiento}>
-                Reintentar
-              </Button>
-            </div>
-          </div>
-        </Alert>
-      </div>
+      <FullScreenStatus
+        status="error"
+        title="Error al cargar el panel"
+        description={error}
+        action={
+          <Button variant="primary" onClick={cargarCumplimiento}>
+            Reintentar
+          </Button>
+        }
+      />
     );
   }
 

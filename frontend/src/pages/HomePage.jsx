@@ -1,9 +1,8 @@
-import { ArrowRight, BellRing, Check, FileDown, Scale, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BellRing, Check, Scale } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/AuthProvider.jsx';
-import Button from '../components/Button.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { api } from '../lib/api.js';
 import { fechaCorta, fechaLarga, formatearNumero, primerNombre, saludo } from '../lib/format.js';
@@ -325,48 +324,43 @@ export default function HomePage() {
               <h2 id="gestion-sg-sst" className={styles.small}>
                 Auditoría y cumplimiento
               </h2>
-              <p className="muted" style={{ fontSize: '14px', margin: '6px 0 16px' }}>
-                Revisa el estado normativo y descarga reportes para el SG-SST.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-                <Button
+              <div style={{ display: 'grid', gap: '8px', marginTop: '12px' }}>
+                <Link
                   to="/cumplimiento"
-                  variant="secondary"
-                  block
+                  className={styles.stepAction}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0 16px',
-                    textAlign: 'left',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface-muted)',
+                    textDecoration: 'none',
+                    fontWeight: 500,
                   }}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-                    <ShieldCheck size={18} aria-hidden="true" />
-                    <span>Panel de cumplimiento</span>
-                  </span>
+                  <span>Panel de cumplimiento</span>
                   <ArrowRight size={16} aria-hidden="true" />
-                </Button>
-                <Button
+                </Link>
+                <Link
                   to="/reportes"
-                  variant="secondary"
-                  block
+                  className={styles.stepAction}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0 16px',
-                    textAlign: 'left',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface-muted)',
+                    textDecoration: 'none',
+                    fontWeight: 500,
                   }}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-                    <FileDown size={18} aria-hidden="true" />
-                    <span>Reporte para auditoría</span>
-                  </span>
+                  <span>Reporte para auditoría</span>
                   <ArrowRight size={16} aria-hidden="true" />
-                </Button>
+                </Link>
               </div>
             </section>
           )}
