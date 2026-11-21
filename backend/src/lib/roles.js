@@ -26,6 +26,8 @@ export const PERMISOS = Object.freeze({
   ALERTAS_ENVIAR: 'alertas:enviar',
   EQUIPOS_VER: 'equipos:ver',
   EQUIPOS_GESTIONAR: 'equipos:gestionar',
+  REPORTES_VER: 'reportes:ver',
+  CUMPLIMIENTO_VER: 'cumplimiento:ver',
 });
 
 const LECTURA = [
@@ -48,6 +50,8 @@ const PERMISOS_POR_ROL = {
     PERMISOS.MAPA_GESTIONAR,
     PERMISOS.ALERTAS_ENVIAR,
     PERMISOS.EQUIPOS_GESTIONAR,
+    PERMISOS.REPORTES_VER,
+    PERMISOS.CUMPLIMIENTO_VER,
   ],
   [ROLES.BRIGADISTA]: [
     ...LECTURA,
@@ -61,5 +65,6 @@ export function permisosDe(rol) {
 }
 
 export function tienePermiso(rol, permiso) {
+  if (rol === ROLES.ADMINISTRADOR) return true;
   return permisosDe(rol).includes(permiso);
 }
