@@ -28,7 +28,13 @@ export default function Button({
 
   const content = (
     <>
-      {loading ? <span className="spinner" aria-hidden="true" /> : Icon && <Icon size={18} aria-hidden="true" />}
+      {loading ? (
+        <span className="spinner" aria-hidden="true" />
+      ) : typeof Icon === 'function' ? (
+        <Icon size={18} aria-hidden="true" />
+      ) : (
+        Icon
+      )}
       {children && <span>{children}</span>}
     </>
   );

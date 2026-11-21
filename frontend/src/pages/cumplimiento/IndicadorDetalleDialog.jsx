@@ -55,7 +55,7 @@ export default function IndicadorDetalleDialog({ indicador, open, onClose }) {
         <Button
           variant="primary"
           onClick={handleAccion}
-          icon={<ArrowRight aria-hidden="true" size={16} />}
+          icon={ArrowRight}
         >
           {indicador.accion.texto}
         </Button>

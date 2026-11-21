@@ -17,10 +17,13 @@ import {
 import styles from './CumplimientoPage.module.css';
 
 const ICONOS = {
+  plan_emergencia: FileCheck,
   plan: FileCheck,
   brigadas: Flame,
   simulacros: BellRing,
+  inventario_equipos: Wrench,
   equipos: Wrench,
+  mapa_evacuacion: MapPin,
   mapa: MapPin,
 };
 
