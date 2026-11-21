@@ -45,12 +45,17 @@ export function calcularIndicadoresCumplimiento({
   equipos = [],
   simulacros = [],
 }) {
-  const numSedes = sedes.length;
+  const listaSedes = Array.isArray(sedes) ? sedes : [];
+  const listaBrigadas = Array.isArray(brigadas) ? brigadas : [];
+  const listaEquipos = Array.isArray(equipos) ? equipos : [];
+  const listaSimulacros = Array.isArray(simulacros) ? simulacros : [];
+
+  const numSedes = listaSedes.length;
 
   // 1. Plan de emergencias
-  const conPlanAprobado = sedes.filter((s) => s.plan?.estado === 'aprobado').length;
-  const conPlanBorrador = sedes.filter((s) => s.plan?.estado === 'borrador').length;
-  const sinPlan = numSedes - conPlanAprobado - conPlanBorrador;
+  const conPlanAprobado = listaSedes.filter((s) => s?.plan?.estado === 'aprobado').length;
+  const conPlanBorrador = listaSedes.filter((s) => s?.plan?.estado === 'borrador').length;
+  const sinPlan = Math.max(0, numSedes - conPlanAprobado - conPlanBorrador);
 
   let estadoPlan = 'rojo';
   let porcentajePlan = 0;
@@ -88,8 +93,8 @@ export function calcularIndicadoresCumplimiento({
   };
 
   // 2. Conformación de brigadas
-  const conformadas = sedes.reduce((acc, s) => {
-    const hayBrigada = brigadas.some((b) => (b.sede?.id ?? b.sedeId) === s.id);
+  const conformadas = listaSedes.reduce((acc, s) => {
+    const hayBrigada = listaBrigadas.some((b) => (b.sede?.id ?? b.sedeId ?? b.id_sede) === s.id);
     return acc + (hayBrigada ? 1 : 0);
   }, 0);
 
@@ -97,7 +102,7 @@ export function calcularIndicadoresCumplimiento({
   let porcentajeBrigadas = 0;
   if (numSedes > 0) {
     porcentajeBrigadas = Math.round((conformadas / numSedes) * 100);
-    if (conformadas === numSedes && brigadas.length >= numSedes * 2) estadoBrigadas = 'verde';
+    if (conformadas === numSedes && listaBrigadas.length >= numSedes * 2) estadoBrigadas = 'verde';
     else if (conformadas > 0) estadoBrigadas = 'amarillo';
   }
 
@@ -107,29 +112,29 @@ export function calcularIndicadoresCumplimiento({
     icono: ShieldPlus,
     estado: estadoBrigadas,
     porcentaje: porcentajeBrigadas,
-    resumen: `${conformadas} de ${numSedes} sedes con brigada activa.`,
+    resumen: `${conformadas} de ${numSedes} ${numSedes === 1 ? 'sede con brigada activa' : 'sedes con brigada activa'}.`,
     queFalta:
       conformadas < numSedes
         ? `Faltan brigadas en ${numSedes - conformadas} ${numSedes - conformadas === 1 ? 'sede' : 'sedes'}. Debes asignar un líder y miembros en primeros auxilios y evacuación.`
-        : brigadas.some((b) => !b.lider)
+        : listaBrigadas.some((b) => !b.lider)
           ? 'Hay brigadas conformadas que aún no tienen un líder asignado.'
           : 'Todas las brigadas requeridas están conformadas y cuentan con su líder.',
     requisitos: [
-      { texto: 'Brigada de primeros auxilios activa', cumplido: brigadas.some((b) => b.tipo === 'primeros_auxilios') },
-      { texto: 'Brigada de evacuación y rescate activa', cumplido: brigadas.some((b) => b.tipo === 'evacuacion') },
-      { texto: 'Líder asignado y capacitado por brigada', cumplido: brigadas.length > 0 && brigadas.every((b) => Boolean(b.lider)) },
+      { texto: 'Brigada de primeros auxilios activa', cumplido: listaBrigadas.some((b) => b.tipo === 'primeros_auxilios') },
+      { texto: 'Brigada de evacuación y rescate activa', cumplido: listaBrigadas.some((b) => b.tipo === 'evacuacion') },
+      { texto: 'Líder asignado y capacitado por brigada', cumplido: listaBrigadas.length > 0 && listaBrigadas.every((b) => Boolean(b.lider)) },
     ],
     norma: 'Resolución 2400 de 1979 y Resolución 0312 de 2019.',
     accion: { texto: 'Conformar brigadas', to: '/brigadas', ruta: '/brigadas' },
     detalles: [
-      { texto: 'Brigada de primeros auxilios activa', cumple: brigadas.some((b) => b.tipo === 'primeros_auxilios') },
-      { texto: 'Brigada de evacuación y rescate activa', cumple: brigadas.some((b) => b.tipo === 'evacuacion') },
-      { texto: 'Líder asignado y capacitado por brigada', cumple: brigadas.length > 0 && brigadas.every((b) => Boolean(b.lider)) },
+      { texto: 'Brigada de primeros auxilios activa', cumple: listaBrigadas.some((b) => b.tipo === 'primeros_auxilios') },
+      { texto: 'Brigada de evacuación y rescate activa', cumple: listaBrigadas.some((b) => b.tipo === 'evacuacion') },
+      { texto: 'Líder asignado y capacitado por brigada', cumple: listaBrigadas.length > 0 && listaBrigadas.every((b) => Boolean(b.lider)) },
     ],
   };
 
   // 3. Simulacros reglamentarios
-  const haySimulacro = simulacros.length > 0;
+  const haySimulacro = listaSimulacros.length > 0;
   const indSimulacros = {
     id: 'simulacros',
     titulo: 'Simulacros de evacuación anuales',
@@ -155,10 +160,12 @@ export function calcularIndicadoresCumplimiento({
   };
 
   // 4. Inventario de equipos de emergencia
-  const totalEquipos = equipos.length;
-  const vencidos = equipos.filter((e) => estaVencido(e.fechaVencimiento));
-  const proximos = equipos.filter((e) => esProximoAVencer(e.fechaVencimiento));
-  const alDia = equipos.filter((e) => !estaVencido(e.fechaVencimiento) && !esProximoAVencer(e.fechaVencimiento));
+  const totalEquipos = listaEquipos.length;
+  const vencidos = listaEquipos.filter((e) => estaVencido(e.fechaVencimiento ?? e.fecha_vencimiento));
+  const proximos = listaEquipos.filter((e) => esProximoAVencer(e.fechaVencimiento ?? e.fecha_vencimiento));
+  const alDia = listaEquipos.filter(
+    (e) => !estaVencido(e.fechaVencimiento ?? e.fecha_vencimiento) && !esProximoAVencer(e.fechaVencimiento ?? e.fecha_vencimiento)
+  );
 
   let estadoEquipos = 'verde';
   let porcentajeEquipos = 100;
@@ -196,14 +203,14 @@ export function calcularIndicadoresCumplimiento({
     requisitos: [
       { texto: 'Extintores con recarga vigente', cumplido: vencidos.length === 0 && totalEquipos > 0 },
       { texto: 'Botiquines inspeccionados y dotados', cumplido: totalEquipos > 0 },
-      { texto: 'Camilla rígida señalizada y accesible', cumplido: equipos.some((e) => e.tipo === 'camilla') },
+      { texto: 'Camilla rígida señalizada y accesible', cumplido: listaEquipos.some((e) => e.tipo === 'camilla') },
     ],
     norma: 'Norma NFPA 10 y Resolución 0312 de 2019.',
     accion: { texto: 'Revisar inventario', to: '/equipos', ruta: '/equipos' },
     detalles: [
       { texto: 'Extintores con recarga vigente', cumple: vencidos.length === 0 && totalEquipos > 0 },
       { texto: 'Botiquines inspeccionados y dotados', cumple: totalEquipos > 0 },
-      { texto: 'Camilla rígida señalizada y accesible', cumple: equipos.some((e) => e.tipo === 'camilla') },
+      { texto: 'Camilla rígida señalizada y accesible', cumple: listaEquipos.some((e) => e.tipo === 'camilla') },
     ],
   };
 
@@ -267,29 +274,40 @@ export async function obtenerDatosCumplimiento({ sedeId = null, signal } = {}) {
     // Si no está disponible en backend aún, se calcula con los datos existentes
   }
 
-  // Cargar sedes, brigadas y equipos
-  const [sedesRes, brigadasRes] = await Promise.allSettled([
-    api('/api/sedes', { signal }),
-    api('/api/brigadas', { signal }),
-  ]);
+  // Cargar sedes de forma segura
+  let sedes = [];
+  try {
+    const sRes = await api('/api/sedes', { signal });
+    sedes = Array.isArray(sRes?.sedes) ? sRes.sedes : [];
+  } catch {
+    sedes = [];
+  }
 
-  let sedes = sedesRes.status === 'fulfilled' ? (sedesRes.value.sedes || []) : [];
   if (sedeId) {
     sedes = sedes.filter((s) => s.id === sedeId);
   }
-  const brigadas = brigadasRes.status === 'fulfilled' ? (brigadasRes.value.brigadas || []) : [];
 
-  // Equipos de las sedes
+  // Cargar brigadas de forma segura
+  let brigadas = [];
+  try {
+    const query = sedeId ? `?sede=${encodeURIComponent(sedeId)}` : '';
+    const bRes = await api(`/api/brigadas${query}`, { signal });
+    brigadas = Array.isArray(bRes?.brigadas) ? bRes.brigadas : [];
+  } catch {
+    brigadas = [];
+  }
+
+  // Equipos de las sedes de forma segura
   let equipos = [];
   try {
     if (sedeId) {
       const eqRes = await api(`/api/sedes/${sedeId}/equipos`, { signal });
-      equipos = eqRes.equipos || [];
+      equipos = Array.isArray(eqRes?.equipos) ? eqRes.equipos : [];
     } else {
       const equiposPorSede = await Promise.all(
         sedes.map((s) =>
           api(`/api/sedes/${s.id}/equipos`, { signal })
-            .then((r) => r.equipos || [])
+            .then((r) => (Array.isArray(r?.equipos) ? r.equipos : []))
             .catch(() => [])
         )
       );
