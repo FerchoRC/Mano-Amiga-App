@@ -27,19 +27,24 @@ export const rolSchema = z.enum(LISTA_ROLES, 'Elige un rol válido.');
 
 export const uuidSchema = z.uuid();
 
+// Valida un valor con un esquema zod; si falla, responde 400 con el error de cada campo.
+export function validar(schema, valor) {
+  const result = schema.safeParse(valor ?? {});
+  if (!result.success) {
+    const campos = {};
+    for (const issue of result.error.issues) {
+      const campo = issue.path.join('.') || '_';
+      campos[campo] ??= issue.message;
+    }
+    throw new AppError(400, 'DATOS_INVALIDOS', 'Revisa los datos marcados.', campos);
+  }
+  return result.data;
+}
+
 // Valida req.body con un esquema zod y lo reemplaza por la versión limpia.
 export function validateBody(schema) {
   return (req, _res, next) => {
-    const result = schema.safeParse(req.body ?? {});
-    if (!result.success) {
-      const campos = {};
-      for (const issue of result.error.issues) {
-        const campo = issue.path.join('.') || '_';
-        campos[campo] ??= issue.message;
-      }
-      throw new AppError(400, 'DATOS_INVALIDOS', 'Revisa los datos marcados.', campos);
-    }
-    req.body = result.data;
+    req.body = validar(schema, req.body);
     next();
   };
 }

@@ -218,3 +218,21 @@ ALTER TABLE alerta ALTER CONSTRAINT alerta_id_empresa_fkey DEFERRABLE INITIALLY 
 ALTER TABLE alerta ALTER CONSTRAINT alerta_id_sede_fkey DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE alerta ALTER CONSTRAINT alerta_id_usuario_fkey DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE alerta ALTER CONSTRAINT alerta_finalizado_por_fkey DEFERRABLE INITIALLY DEFERRED;
+
+-- HU-13: Constancia de simulacros de evacuación realizados por sede.
+CREATE TABLE IF NOT EXISTS simulacro (
+  id_simulacro      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_sede           uuid          NOT NULL REFERENCES sede (id_sede) ON DELETE CASCADE,
+  -- Diferida por el mismo motivo que las de alerta: al borrar la empresa se llega por sede y por usuario.
+  id_usuario        uuid          REFERENCES usuario (id_usuario) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
+  fecha             date          NOT NULL,
+  participantes     integer       NOT NULL CHECK (participantes >= 0),
+  tiempo_evacuacion varchar(20),
+  observaciones     text,
+  plan_mejora       text,
+  creado_en         timestamptz   NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS simulacro_sede_fecha_idx ON simulacro (id_sede, fecha DESC);
+-- Bases creadas con la primera versión de la tabla: la llave también debe ser diferida.
+ALTER TABLE simulacro ALTER CONSTRAINT simulacro_id_usuario_fkey DEFERRABLE INITIALLY DEFERRED;

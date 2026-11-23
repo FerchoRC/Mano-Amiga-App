@@ -1,4 +1,4 @@
-import { ArrowRight, BellRing, Check, Scale } from 'lucide-react';
+import { ArrowRight, BellRing, Check, FileText, Scale, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
@@ -326,6 +326,36 @@ export default function HomePage() {
               <p>{obligacion(empresa.numEmpleados)}</p>
             </div>
           </section>
+
+          {esAdmin && (
+            <section className={styles.card} aria-labelledby="gestion-sg-sst">
+              <h2 id="gestion-sg-sst" className={styles.small}>
+                Auditoría y cumplimiento
+              </h2>
+              <div className={styles.auditoriaActions}>
+                <Link
+                  to="/cumplimiento"
+                  className={styles.auditoriaAction}
+                >
+                  <span className={styles.auditoriaActionLabel}>
+                    <ShieldCheck size={18} aria-hidden="true" />
+                    <span>Panel de cumplimiento</span>
+                  </span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+                <Link
+                  to="/reportes"
+                  className={styles.auditoriaAction}
+                >
+                  <span className={styles.auditoriaActionLabel}>
+                    <FileText size={18} aria-hidden="true" />
+                    <span>Reporte para auditoría</span>
+                  </span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            </section>
+          )}
         </aside>
       </div>
     </div>

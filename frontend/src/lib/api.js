@@ -43,7 +43,8 @@ export function setSessionLostHandler(handler) {
   onSessionLost = handler;
 }
 
-export async function api(path, { method = 'GET', body, signal } = {}) {
+// Con `archivo: true` devuelve { blob, nombre } en lugar de JSON (p. ej. un PDF).
+export async function api(path, { method = 'GET', body, signal, archivo = false } = {}) {
   const token = tokenStore.get();
   const headers = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -67,6 +68,11 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
   }
 
   if (res.status === 204) return null;
+  if (archivo && res.ok) {
+    const disposicion = res.headers.get('Content-Disposition') ?? '';
+    const nombre = /filename="([^"]+)"/.exec(disposicion)?.[1] ?? 'archivo';
+    return { blob: await res.blob(), nombre };
+  }
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {

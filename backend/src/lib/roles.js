@@ -26,6 +26,10 @@ export const PERMISOS = Object.freeze({
   ALERTAS_ENVIAR: 'alertas:enviar',
   EQUIPOS_VER: 'equipos:ver',
   EQUIPOS_GESTIONAR: 'equipos:gestionar',
+  SIMULACROS_GESTIONAR: 'simulacros:gestionar',
+  // HU-12 y HU-13: solo el administrador descarga el reporte y ve el panel.
+  REPORTES_VER: 'reportes:ver',
+  CUMPLIMIENTO_VER: 'cumplimiento:ver',
 });
 
 const LECTURA = [
@@ -48,6 +52,9 @@ const PERMISOS_POR_ROL = {
     PERMISOS.MAPA_GESTIONAR,
     PERMISOS.ALERTAS_ENVIAR,
     PERMISOS.EQUIPOS_GESTIONAR,
+    PERMISOS.SIMULACROS_GESTIONAR,
+    PERMISOS.REPORTES_VER,
+    PERMISOS.CUMPLIMIENTO_VER,
   ],
   [ROLES.BRIGADISTA]: [
     ...LECTURA,

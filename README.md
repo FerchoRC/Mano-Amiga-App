@@ -145,6 +145,8 @@ puede usar.
 | Enviar alertas de emergencia | ✅ | ✅ | |
 | Confirmar estado ante una emergencia | ✅ | ✅ | ✅ |
 | Gestionar inventario de equipos | ✅ | | |
+| Descargar reporte de auditoría en PDF | ✅ | | |
+| Consultar panel de cumplimiento SG-SST | ✅ | | |
 
 Cada persona tiene una sede: recibe las alertas de esa sede y el mapa abre en ella. Quien no tiene
 sede asignada (por ejemplo, el administrador) recibe las alertas de todas.
@@ -183,8 +185,8 @@ cd backend
 npm test
 ```
 
-Son 57 pruebas de integración contra PostgreSQL real, una o más por cada criterio de aceptación de
-HU-01 a HU-11. Cada prueba crea sus propios datos y los borra al terminar.
+Son 71 pruebas de integración contra PostgreSQL real, una o más por cada criterio de aceptación de
+HU-01 a HU-13. Cada prueba crea sus propios datos y los borra al terminar.
 
 ---
 

@@ -2,10 +2,12 @@ import {
   Boxes,
   Building2,
   Ellipsis,
+  FileDown,
   House,
   KeyRound,
   LogOut,
   Map as MapIcon,
+  ShieldCheck,
   ShieldPlus,
   Siren,
   Users,
@@ -35,6 +37,8 @@ const NAV = [
   { to: '/sedes', label: 'Sedes', icon: Building2, permiso: PERMISOS.SEDES_VER },
   // "Inventario" y no "Equipos", para no confundirlo con "Equipo" (las personas).
   { to: '/equipos', label: 'Inventario', icon: Boxes, permiso: PERMISOS.EQUIPOS_VER },
+  { to: '/cumplimiento', label: 'Cumplimiento', icon: ShieldCheck, permiso: PERMISOS.CUMPLIMIENTO_VER },
+  { to: '/reportes', label: 'Reportes', icon: FileDown, permiso: PERMISOS.REPORTES_VER },
   { to: '/equipo', label: 'Equipo', icon: Users, permiso: PERMISOS.USUARIOS_GESTIONAR },
 ];
 
@@ -87,7 +91,7 @@ export default function AppLayout() {
   };
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${hayMas ? styles.muchasSecciones : ''}`}>
       <header className={styles.header}>
         <div className={styles.bar}>
           <Link to="/inicio" className={styles.brand}>

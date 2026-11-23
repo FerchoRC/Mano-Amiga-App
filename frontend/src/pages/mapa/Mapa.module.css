@@ -209,6 +209,17 @@
   text-align: center;
 }
 
+.simulacroForm {
+  display: grid;
+  gap: 16px;
+}
+
+@media (max-width: 559px) {
+  .simulacroForm {
+    gap: 14px;
+  }
+}
+
 @media (min-width: 960px) {
   .layout {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
@@ -220,4 +231,10 @@
     top: calc(var(--header-h) + 24px);
     height: min(680px, calc(100dvh - var(--header-h) - 64px));
   }
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }

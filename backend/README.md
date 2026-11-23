@@ -88,6 +88,11 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 | POST | `/api/sedes/:id/equipos` | Administrador | Registra un equipo |
 | PUT | `/api/equipos/:id` | Administrador | Edita un equipo (campos parciales; `fechaVencimiento: null` la quita) |
 | DELETE | `/api/equipos/:id` | Administrador | Elimina un equipo |
+| GET | `/api/sedes/:id/simulacros` | Sesión | Simulacros de evacuación registrados en la sede |
+| POST | `/api/sedes/:id/simulacros` | Administrador | Registra un simulacro: `fecha`, `participantes`, `tiempoEvacuacion?`, `observaciones?`, `planMejora?` |
+| DELETE | `/api/sedes/:id/simulacros/:idSimulacro` | Administrador | Elimina un simulacro |
+| GET | `/api/cumplimiento?sedeId=` | Administrador | HU-13: indicadores de cumplimiento (toda la empresa o una sede) |
+| GET | `/api/reportes/auditoria?sedeId=&desde=&hasta=&secciones=` | Administrador | HU-12: reporte para auditoría en PDF |
 
 ### Brigadas
 
@@ -118,6 +123,33 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 - Tipos: `extintor`, `botiquin`, `camilla` y `otro`; estados: `operativo`, `mantenimiento`, `vencido` y `baja`.
 - Cada equipo pertenece a una sede. La fecha de vencimiento o recarga es opcional (`AAAA-MM-DD`).
 - El frontend resalta los que vencen en 30 días o menos y los ya vencidos.
+
+### Panel de cumplimiento (HU-13)
+
+Se calcula en el servidor con los datos reales de la empresa (`services/cumplimiento.js`). Cada
+indicador trae `estado` (`verde`, `amarillo` o `rojo`), `porcentaje`, `queFalta` y `detalles`
+(una línea por sede o por equipo, con `cumple`).
+
+| Indicador | Verde | Amarillo | Rojo |
+| --- | --- | --- | --- |
+| Plan de emergencias | Todas las sedes con plan aprobado | Alguna aprobada o con borrador | Ninguna |
+| Brigadas | Las 3 brigadas en cada sede | Alguna conformada | Ninguna |
+| Simulacro anual | Todas con simulacro en los últimos 365 días | Algunas | Ninguna |
+| Equipos al día | Ninguno vencido, por vencer ni en mantenimiento | Por vencer (≤ 30 días), en mantenimiento o sede sin equipos | Algún vencido o ningún equipo |
+| Mapa de evacuación | Todas con punto de encuentro y salida o ruta | Alguna avanzada | Ninguna |
+
+Los equipos dados de baja no cuentan. El porcentaje global es el promedio de los cinco.
+
+### Reporte para auditoría (HU-12)
+
+PDF A4 generado con `pdfkit` (`services/reporteAuditoria.js`), con las fuentes Inter y Poppins
+(licencia OFL) de `assets/fonts/`. Incluye la ficha de la empresa, el resumen de cumplimiento y,
+por cada sede, las secciones elegidas (`plan`, `brigadas`, `simulacros`, `inventario`).
+
+- Por defecto, el periodo es el último año hasta hoy; `hasta` no puede ser futura.
+- El plan que se muestra es la versión vigente al cierre del periodo, y se listan las aprobadas en él.
+- Entran los simulacros con fecha dentro del periodo.
+- Las brigadas y el inventario se muestran como están el día en que se genera.
 
 ### Tiempo real (`/ws`)
 

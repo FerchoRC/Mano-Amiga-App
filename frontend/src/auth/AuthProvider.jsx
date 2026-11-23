@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
       logout,
       reload: loadSession,
       clearAviso: () => setState((s) => ({ ...s, aviso: null })),
-      can: (permiso) => Boolean(state.session?.permisos.includes(permiso)),
+      can: (permiso) => Boolean(state.session?.permisos?.includes(permiso)),
     }),
     [state, startSession, updateSession, logout, loadSession]
   );
