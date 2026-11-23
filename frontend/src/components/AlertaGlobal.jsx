@@ -2,8 +2,10 @@ import { ChevronRight, Siren } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 
+import { useAuth } from '../auth/AuthProvider.jsx';
 import { tipoEmergencia } from '../lib/alertas.js';
 import { api } from '../lib/api.js';
+import { avisarEmergencia } from '../lib/notificaciones.js';
 import { useRealtimeEvent } from '../lib/useRealtime.js';
 import styles from './AlertaGlobal.module.css';
 
@@ -16,6 +18,8 @@ const ESTADO = {
 // pantallas (en Inicio ya está el aviso completo con los botones de HU-10).
 export default function AlertaGlobal() {
   const location = useLocation();
+  const { session } = useAuth();
+  const miId = session?.usuario.id;
   const [alerta, setAlerta] = useState(null);
 
   const cargar = useCallback(() => {
@@ -24,12 +28,23 @@ export default function AlertaGlobal() {
       .catch(() => {});
   }, []);
 
+  // Una alerta nueva que le aplica a la persona: además del aviso en pantalla, un aviso
+  // del sistema si la pestaña está en segundo plano (y lo autorizó).
+  const onAlertaNueva = useCallback(() => {
+    api('/api/alertas/activa')
+      .then((res) => {
+        setAlerta(res.alerta ?? null);
+        if (res.alerta && res.alerta.remitenteId !== miId) avisarEmergencia(res.alerta);
+      })
+      .catch(() => {});
+  }, [miId]);
+
   // Al navegar se refresca: así se refleja si la persona ya confirmó su estado.
   useEffect(() => {
     cargar();
   }, [cargar, location.pathname]);
 
-  useRealtimeEvent('alerta:nueva', cargar);
+  useRealtimeEvent('alerta:nueva', onAlertaNueva);
   useRealtimeEvent('alerta:finalizada', cargar);
 
   if (!alerta || location.pathname === '/inicio') return null;

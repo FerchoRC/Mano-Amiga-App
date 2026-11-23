@@ -212,3 +212,35 @@
   margin: 0 auto;
   padding-top: 8px;
 }
+
+.olvido {
+  justify-self: end;
+  margin-top: -6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.icono {
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+.cargando {
+  display: grid;
+  place-items: center;
+  padding: 48px 0;
+}

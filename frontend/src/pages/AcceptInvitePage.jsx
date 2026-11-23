@@ -1,11 +1,11 @@
 import { Link2Off } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 import { useAuth } from '../auth/AuthProvider.jsx';
 import Alert from '../components/Alert.jsx';
 import Button from '../components/Button.jsx';
-import { PasswordField, TextField } from '../components/Field.jsx';
+import { Checkbox, PasswordField, TextField } from '../components/Field.jsx';
 import { api } from '../lib/api.js';
 import { ROLES } from '../lib/roles.js';
 import { limpiarErrores, validarContrasena, validarNombre } from '../lib/validators.js';
@@ -23,6 +23,7 @@ export default function AcceptInvitePage() {
   const [nombre, setNombre] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [confirmacion, setConfirmacion] = useState('');
+  const [acepta, setAcepta] = useState(false);
   const [errores, setErrores] = useState({});
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
@@ -46,6 +47,7 @@ export default function AcceptInvitePage() {
       nombre: validarNombre(nombre),
       contrasena: validarContrasena(contrasena),
       confirmacion: confirmacion === contrasena ? null : 'Las contraseñas no coinciden.',
+      aceptaTratamientoDatos: acepta ? null : 'Debes aceptar la política de tratamiento de datos.',
     });
     setErrores(nuevos);
     if (Object.keys(nuevos).length) return;
@@ -55,7 +57,7 @@ export default function AcceptInvitePage() {
     try {
       const data = await api(`/api/invitaciones/${encodeURIComponent(token)}/aceptar`, {
         method: 'POST',
-        body: { nombre, contrasena },
+        body: { nombre, contrasena, aceptaTratamientoDatos: acepta },
       });
       startSession(data);
       navigate('/inicio', { replace: true, state: { bienvenida: 'invitacion' } });
@@ -144,6 +146,20 @@ export default function AcceptInvitePage() {
           value={confirmacion}
           onChange={(e) => setConfirmacion(e.target.value)}
           error={errores.confirmacion}
+        />
+        <Checkbox
+          checked={acepta}
+          onChange={(e) => setAcepta(e.target.checked)}
+          error={errores.aceptaTratamientoDatos}
+          label={
+            <>
+              Autorizo el tratamiento de mis datos según la{' '}
+              <Link to="/politica-de-datos" target="_blank" rel="noopener">
+                política de tratamiento de datos
+              </Link>{' '}
+              (Ley 1581 de 2012).
+            </>
+          }
         />
         <Button type="submit" block loading={enviando}>
           Crear cuenta y entrar

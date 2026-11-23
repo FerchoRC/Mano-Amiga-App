@@ -25,7 +25,7 @@ function estadoBrigada(brigada) {
   return { texto: 'Sin brigadistas activos', tono: 'warning' };
 }
 
-export default function BrigadaCard({ tipo, brigada, sede, brigadas, onEdit, onDelete, onCreate }) {
+export default function BrigadaCard({ tipo, brigada, onEdit, onDelete, onCreate }) {
   const toast = useToast();
   const { can } = useAuth();
   const [expandida, setExpandida] = useState(false);
@@ -153,9 +153,9 @@ export default function BrigadaCard({ tipo, brigada, sede, brigadas, onEdit, onD
           ))}
         </div>
 
-        {miembros.length > 4 && (
+        {ocultos > 0 && (
           <button type="button" className={styles.toggleMembers} onClick={() => setExpandida((actual) => !actual)} aria-expanded={expandida}>
-            {expandida ? 'Ocultar miembros' : `Ver los ${miembros.length - 4} miembros`}
+            {expandida ? 'Ver menos' : `Ver ${ocultos} ${ocultos === 1 ? 'brigadista más' : 'brigadistas más'}`}
           </button>
         )}
       </div>

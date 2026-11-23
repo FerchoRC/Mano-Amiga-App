@@ -21,6 +21,7 @@ import AlertaGlobal from '../components/AlertaGlobal.jsx';
 import Avatar from '../components/Avatar.jsx';
 import Button from '../components/Button.jsx';
 import Dialog from '../components/Dialog.jsx';
+import ErrorBoundary from '../components/ErrorBoundary.jsx';
 import Logo from '../components/Logo.jsx';
 import Menu from '../components/Menu.jsx';
 import { useToast } from '../components/Toast.jsx';
@@ -51,6 +52,9 @@ export default function AppLayout() {
   const location = useLocation();
   const toast = useToast();
   const { usuario, empresa } = session;
+  // Con contraseña temporal o sin aceptar la política de datos, la persona solo puede
+  // terminar ese paso: no hay navegación ni alertas (el backend lo bloquea igual).
+  const restringido = usuario.debeCambiarContrasena || usuario.consentimientoPendiente;
 
   const [alertaDialog, setAlertaDialog] = useState(false);
   const [sedes, setSedes] = useState([]);
@@ -65,7 +69,7 @@ export default function AppLayout() {
   }, [can]);
 
   // Mientras tenga contraseña temporal no hay navegación: solo puede cambiarla.
-  const items = usuario.debeCambiarContrasena
+  const items = restringido
     ? []
     : NAV.filter((item) => !item.permiso || can(item.permiso));
 
@@ -75,7 +79,7 @@ export default function AppLayout() {
   const [masAbierto, setMasAbierto] = useState(false);
 
   const opcionesCuenta = [
-    !usuario.debeCambiarContrasena && {
+    !restringido && {
       label: 'Cambiar contraseña',
       icon: KeyRound,
       onSelect: () => navigate(RUTA_CAMBIAR_CONTRASENA),
@@ -112,7 +116,7 @@ export default function AppLayout() {
           )}
 
           <div className={styles.account}>
-            {can(PERMISOS.ALERTAS_ENVIAR) && !usuario.debeCambiarContrasena && (
+            {can(PERMISOS.ALERTAS_ENVIAR) && !restringido && (
               <Button
                 variant="danger"
                 size="sm"
@@ -141,7 +145,7 @@ export default function AppLayout() {
         </div>
       </header>
 
-      {!usuario.debeCambiarContrasena && <AlertaGlobal />}
+      {!restringido && <AlertaGlobal />}
 
       <main className={styles.main}>
         <Suspense
@@ -151,7 +155,9 @@ export default function AppLayout() {
             </div>
           }
         >
-          <Outlet />
+          <ErrorBoundary resetKey={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </Suspense>
       </main>
 

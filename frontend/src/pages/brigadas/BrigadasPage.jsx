@@ -127,8 +127,6 @@ export default function BrigadasPage() {
                   key={tipo.id}
                   tipo={tipo}
                   brigada={brigada}
-                  sede={sede}
-                  brigadas={brigadas ?? []}
                   onEdit={() => setDialog({ sede, brigada, tipo: tipo.id })}
                   onDelete={onDelete}
                   onCreate={() => setDialog({ sede, tipo: tipo.id })}

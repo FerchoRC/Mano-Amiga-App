@@ -1,5 +1,5 @@
 // HU-07: Detalle del punto o ruta seleccionada.
-// HU-08: Permitir eliminar puntos a los administradores.
+// HU-08: el administrador puede eliminar puntos y rutas.
 import { Trash2, X } from 'lucide-react';
 
 import Button from '../../components/Button.jsx';
@@ -37,15 +37,10 @@ export default function MapaDetalle({ item, onClose, puedeEditar = false, onElim
           </p>
         )}
 
-        {!esRuta && puedeEditar && (
+        {puedeEditar && (
           <div style={{ marginTop: '12px' }}>
-            <Button
-              variant="danger"
-              size="sm"
-              icon={Trash2}
-              onClick={() => onEliminar?.(item)}
-            >
-              Eliminar punto
+            <Button variant="danger" size="sm" icon={Trash2} onClick={() => onEliminar?.(item)}>
+              {esRuta ? 'Eliminar ruta' : 'Eliminar punto'}
             </Button>
           </div>
         )}

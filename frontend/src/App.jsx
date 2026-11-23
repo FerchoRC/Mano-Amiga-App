@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 
 import {
@@ -6,6 +6,7 @@ import {
   RequireAuth,
   RequirePermission,
   RUTA_CAMBIAR_CONTRASENA,
+  RUTA_CONSENTIMIENTO,
 } from './auth/guards.jsx';
 import AppLayout from './layouts/AppLayout.jsx';
 import AuthLayout from './layouts/AuthLayout.jsx';
@@ -13,10 +14,15 @@ import { PERMISOS } from './lib/roles.js';
 import AcceptInvitePage from './pages/AcceptInvitePage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
 import HomePage from './pages/HomePage.jsx';
+import ConsentimientoPage from './pages/legal/ConsentimientoPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import NuevaContrasenaPage from './pages/NuevaContrasenaPage.jsx';
+import RecuperarPage from './pages/RecuperarPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
-// Las pantallas con mapear usan Leaflet y se cargan solo cuando se visitan.
+import TeamPage from './pages/team/TeamPage.jsx';
+
+// Las pantallas pesadas (mapas, editor del plan, reportes) se cargan solo cuando se visitan.
 const BrigadasPage = lazy(() => import('./pages/brigadas/BrigadasPage.jsx'));
 const CumplimientoPage = lazy(() => import('./pages/cumplimiento/CumplimientoPage.jsx'));
 const EquiposPage = lazy(() => import('./pages/equipos/EquiposPage.jsx'));
@@ -26,7 +32,7 @@ const ReportesPage = lazy(() => import('./pages/reportes/ReportesPage.jsx'));
 const SedeDetailPage = lazy(() => import('./pages/sedes/SedeDetailPage.jsx'));
 const SedeFormPage = lazy(() => import('./pages/sedes/SedeFormPage.jsx'));
 const SedesPage = lazy(() => import('./pages/sedes/SedesPage.jsx'));
-import TeamPage from './pages/team/TeamPage.jsx';
+const PoliticaDatosPage = lazy(() => import('./pages/legal/PoliticaDatosPage.jsx'));
 
 export default function App() {
   return (
@@ -35,14 +41,17 @@ export default function App() {
         <Route element={<GuestOnly />}>
           <Route path="/ingresar" element={<LoginPage />} />
           <Route path="/registro" element={<RegisterPage />} />
+          <Route path="/recuperar" element={<RecuperarPage />} />
         </Route>
         <Route path="/invitacion/:token" element={<AcceptInvitePage />} />
+        <Route path="/recuperar/:token" element={<NuevaContrasenaPage />} />
       </Route>
 
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/inicio" element={<HomePage />} />
           <Route path={RUTA_CAMBIAR_CONTRASENA} element={<ChangePasswordPage />} />
+          <Route path={RUTA_CONSENTIMIENTO} element={<ConsentimientoPage />} />
           <Route
             path="/sedes"
             element={
@@ -134,6 +143,14 @@ export default function App() {
         </Route>
       </Route>
 
+      <Route
+        path="/politica-de-datos"
+        element={
+          <Suspense fallback={null}>
+            <PoliticaDatosPage />
+          </Suspense>
+        }
+      />
       <Route path="/" element={<Navigate to="/inicio" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

@@ -56,4 +56,12 @@ export function useLeafletMap(containerRef, { center = CENTRO_POR_DEFECTO, zoom 
   return mapRef;
 }
 
+// Leaflet interpreta como HTML el texto que recibe un tooltip o un popup. Los nombres
+// los escribe el usuario, así que se pasan como nodo de texto y nunca como HTML.
+export function textoSeguro(texto) {
+  const span = document.createElement('span');
+  span.textContent = texto ?? '';
+  return span;
+}
+
 export { L };

@@ -153,3 +153,9 @@
     transition: none;
   }
 }
+
+/* Mientras se traza una ruta, el cursor indica que se puede tocar el mapa. */
+.ma-map--trazando,
+.ma-map--trazando .leaflet-interactive {
+  cursor: crosshair;
+}

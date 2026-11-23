@@ -20,6 +20,7 @@ import MapaDetalle from './MapaDetalle.jsx';
 import MapaEditorBar from './MapaEditorBar.jsx';
 import MapaLeyenda from './MapaLeyenda.jsx';
 import MapaLista from './MapaLista.jsx';
+import RutaDialog from './RutaDialog.jsx';
 import styles from './Mapa.module.css';
 
 export default function MapaPage() {
@@ -41,6 +42,9 @@ export default function MapaPage() {
   const [dialogAgregar, setDialogAgregar] = useState(false);
   const [coordenadasNuevo, setCoordenadasNuevo] = useState(null);
   const [puntoAEliminar, setPuntoAEliminar] = useState(null);
+  // HU-07: ruta en trazado ([[lat, lng], …]) o null si no se está trazando.
+  const [trazo, setTrazo] = useState(null);
+  const [dialogRuta, setDialogRuta] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [dialogSimulacro, setDialogSimulacro] = useState(false);
@@ -62,6 +66,7 @@ export default function MapaPage() {
     setError(null);
     setSeleccionado(null);
     setEditando(false);
+    setTrazo(null);
     api(`/api/sedes/${sede.id}/mapa`, { signal: controller.signal })
       .then(({ puntos = [], rutas = [] }) => {
         setDatos({ puntos, rutas });
@@ -127,8 +132,6 @@ export default function MapaPage() {
     return present;
   }, [datos]);
 
-  const lista = datos?.puntos ?? [];
-
   const toggleTipo = (tipo) => {
     if (tipo === 'all') {
       const siguiente = new Set(TIPOS_ELEMENTO.filter((item) => item.id === 'ruta_evacuacion' || (datos?.puntos ?? []).some((punto) => punto.tipo === item.id)).map((item) => item.id));
@@ -176,17 +179,19 @@ export default function MapaPage() {
     }
   }
 
-  // HU-08: Eliminar punto
+  // HU-08: eliminar un punto o una ruta del mapa.
   async function confirmarEliminar() {
     if (!puntoAEliminar) return;
+    const esRuta = puntoAEliminar.clase === 'ruta';
     setEliminando(true);
     try {
-      await api(`/api/sedes/${sede.id}/mapa/puntos/${puntoAEliminar.id}`, {
+      await api(`/api/sedes/${sede.id}/mapa/${esRuta ? 'rutas' : 'puntos'}/${puntoAEliminar.id}`, {
         method: 'DELETE',
       });
       setDatos((prev) => ({
         ...prev,
-        puntos: prev.puntos.filter((p) => p.id !== puntoAEliminar.id),
+        puntos: esRuta ? prev.puntos : prev.puntos.filter((p) => p.id !== puntoAEliminar.id),
+        rutas: esRuta ? prev.rutas.filter((r) => r.id !== puntoAEliminar.id) : prev.rutas,
       }));
       if (seleccionado?.id === puntoAEliminar.id) {
         setSeleccionado(null);
@@ -199,6 +204,15 @@ export default function MapaPage() {
       setEliminando(false);
     }
   }
+
+  const handleRutaCreada = (ruta) => {
+    setDatos((prev) => ({ ...prev, rutas: [...(prev?.rutas ?? []), ruta] }));
+    setVisibles((prev) => new Set(prev).add('ruta_evacuacion'));
+    setTrazo(null);
+    setDialogRuta(false);
+    setSeleccionado({ ...ruta, clase: 'ruta' });
+    toast(`${ruta.nombre} quedó en el mapa.`);
+  };
 
   const handlePuntoAgregado = (nuevoPunto) => {
     setDatos((prev) => ({
@@ -274,7 +288,10 @@ export default function MapaPage() {
               <Button
                 variant={editando ? 'primary' : 'secondary'}
                 icon={Pencil}
-                onClick={() => setEditando((v) => !v)}
+                onClick={() => {
+              setTrazo(null);
+              setEditando((v) => !v);
+            }}
               >
                 {editando ? 'Terminar edición' : 'Editar mapa'}
               </Button>
@@ -285,11 +302,22 @@ export default function MapaPage() {
 
       {editando && (
         <MapaEditorBar
+          trazo={trazo}
           onAgregarPunto={() => {
             setCoordenadasNuevo(null);
             setDialogAgregar(true);
           }}
-          onFinalizarEdicion={() => setEditando(false)}
+          onTrazarRuta={() => {
+            setSeleccionado(null);
+            setTrazo([]);
+          }}
+          onDeshacer={() => setTrazo((t) => t.slice(0, -1))}
+          onCancelarTrazo={() => setTrazo(null)}
+          onGuardarTrazo={() => setDialogRuta(true)}
+          onFinalizarEdicion={() => {
+            setTrazo(null);
+            setEditando(false);
+          }}
         />
       )}
 
@@ -322,7 +350,14 @@ export default function MapaPage() {
                 onSelect={setSeleccionado}
                 editando={editando}
                 onMoverPunto={handleMoverPunto}
+                trazo={trazo}
                 onClicMapa={(coords) => {
+                  if (trazo) {
+                    // Seis decimales: unos 10 cm, más que suficiente para un recorrido a pie.
+                    const punto = [Number(coords.lat.toFixed(6)), Number(coords.lng.toFixed(6))];
+                    setTrazo((t) => (t.length >= 200 ? t : [...t, punto]));
+                    return;
+                  }
                   setCoordenadasNuevo(coords);
                   setDialogAgregar(true);
                 }}
@@ -357,6 +392,16 @@ export default function MapaPage() {
         </div>
       )}
 
+      {dialogRuta && trazo && (
+        <RutaDialog
+          open={dialogRuta}
+          sede={sede}
+          trazado={trazo}
+          onClose={() => setDialogRuta(false)}
+          onCreada={handleRutaCreada}
+        />
+      )}
+
       {dialogAgregar && (
         <AddPuntoDialog
           open={dialogAgregar}
@@ -375,14 +420,18 @@ export default function MapaPage() {
         onClose={() => !eliminando && setPuntoAEliminar(null)}
         size="sm"
         title={`¿Eliminar ${puntoAEliminar?.nombre}?`}
-        description="El elemento se eliminará del mapa de evacuación de esta sede."
+        description={
+          puntoAEliminar?.clase === 'ruta'
+            ? 'La ruta dejará de verse en el mapa de evacuación de esta sede.'
+            : 'El elemento se eliminará del mapa de evacuación de esta sede.'
+        }
         footer={
           <>
             <Button variant="secondary" onClick={() => setPuntoAEliminar(null)} disabled={eliminando}>
               Volver
             </Button>
             <Button variant="danger" onClick={confirmarEliminar} loading={eliminando}>
-              Eliminar punto
+              {puntoAEliminar?.clase === 'ruta' ? 'Eliminar ruta' : 'Eliminar punto'}
             </Button>
           </>
         }

@@ -380,3 +380,29 @@
 .auditoriaAction svg {
   flex: 0 0 auto;
 }
+
+.quietText {
+  display: grid;
+  gap: 8px;
+}
+
+.quietHint {
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+.quietButton {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.quietButton:hover {
+  text-decoration: underline;
+}

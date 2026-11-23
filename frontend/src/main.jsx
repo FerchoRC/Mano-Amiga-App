@@ -9,16 +9,19 @@ import { BrowserRouter } from 'react-router';
 
 import App from './App.jsx';
 import { AuthProvider } from './auth/AuthProvider.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
       <ToastProvider>
         <AuthProvider>
           <App />
         </AuthProvider>
       </ToastProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>
 );
