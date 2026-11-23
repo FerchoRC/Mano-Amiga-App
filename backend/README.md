@@ -5,11 +5,12 @@ API REST con Express 5 y PostgreSQL.
 ## Scripts
 
 ```bash
-npm run dev          # servidor con recarga automática
+npm run dev          # servidor con recarga automática (aplica el esquema al arrancar)
 npm start            # servidor
-npm run db:migrate   # aplica src/db/schema.sql (idempotente)
-npm run db:seed      # recrea la empresa demo
+npm run db:migrate   # aplica src/db/schema.sql sin arrancar el servidor (idempotente)
+npm run db:seed      # recrea la empresa demo (bloqueado en producción)
 npm test             # pruebas de integración (requiere la base levantada)
+npm run lint         # ESLint
 ```
 
 ## Variables de entorno
@@ -18,10 +19,22 @@ Copia `.env.example` a `.env`. Las más importantes:
 
 | Variable | Uso |
 | --- | --- |
-| `DATABASE_URL` | Conexión a PostgreSQL |
-| `APP_URL` | URL del frontend, para los enlaces de invitación y CORS |
+| `DATABASE_URL` | Conexión a PostgreSQL. **Obligatoria en producción** |
+| `APP_URL` | URL del frontend, para los enlaces de invitación y recuperación y para CORS. **Obligatoria en producción** |
+| `DATABASE_SSL` | `verificar` (por defecto en producción), `sin-verificar` (proveedores con certificado propio) o `no` |
 | `SESSION_IDLE_MINUTES` | Minutos sin actividad antes de cerrar la sesión (15 por defecto) |
-| `RESEND_API_KEY` | Si se define, las invitaciones salen por correo; si no, el administrador copia el enlace |
+| `RESEND_API_KEY` | Si se define, salen por correo las invitaciones, la recuperación de contraseña y los avisos de alerta |
+
+En producción (`NODE_ENV=production`) el servidor no arranca si falta `DATABASE_URL` o `APP_URL`.
+
+## Arranque y operación
+
+- Al arrancar, el servidor aplica `schema.sql` (con un candado de PostgreSQL, por si arrancan
+  dos instancias a la vez). Nadie tiene que acordarse de correr `npm run db:migrate`.
+- Cada 6 horas borra sesiones de más de 30 días, enlaces de recuperación usados o vencidos y
+  contadores de intentos ya vencidos.
+- Ante `SIGTERM` (un despliegue nuevo) deja de aceptar conexiones, termina las peticiones en curso
+  y cierra la base. Si se cae una conexión inactiva con la base, la registra y sigue funcionando.
 
 ## Base de datos
 
@@ -32,7 +45,12 @@ docker compose up -d
 Host `localhost`, puerto `5432`, usuario, contraseña y base `manoamiga`.
 
 Tablas: `empresa`, `usuario` (el rol es un campo, como en el diagrama entidad-relación),
-`invitacion`, `sesion`, `sede`, `plan_emergencia` y `plan_version`.
+`invitacion`, `sesion`, `recuperacion`, `consentimiento_datos`, `limite_intentos`, `sede`,
+`plan_emergencia`, `plan_version`, `brigada`, `brigada_usuario`, `mapa_punto`, `mapa_ruta`,
+`alerta`, `alerta_respuesta`, `equipo` y `simulacro`.
+
+El correo es único en toda la plataforma: una persona pertenece a una sola empresa. Es una
+decisión del producto; cambiarla implica que el inicio de sesión pida elegir la empresa.
 
 ## Endpoints
 
@@ -48,6 +66,10 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 | GET | `/api/auth/sesion` | Sesión | Usuario, empresa y permisos |
 | POST | `/api/auth/actividad` | Sesión | Latido que mantiene viva la sesión |
 | PUT | `/api/auth/contrasena` | Sesión | Cambia la propia contraseña (sin la actual si es temporal) |
+| POST | `/api/auth/recuperar` | Público | Envía un enlace para crear una nueva contraseña (responde igual exista o no el correo) |
+| GET | `/api/auth/recuperar/:token` | Público | Valida el enlace de recuperación |
+| POST | `/api/auth/recuperar/:token` | Público | Guarda la nueva contraseña, cierra las demás sesiones e inicia sesión |
+| POST | `/api/auth/consentimiento` | Sesión | Acepta la política de tratamiento de datos vigente (`acepta: true`) |
 | GET | `/api/usuarios` | Administrador | HU-03: personas e invitaciones |
 | POST | `/api/usuarios` | Administrador | Crea la cuenta con nombre, correo, rol y contraseña |
 | POST | `/api/usuarios/:id/contrasena` | Administrador | Restablece la contraseña de otra persona |
@@ -79,6 +101,9 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 | POST | `/api/sedes/:id/mapa/puntos` | Administrador | HU-08: agrega un punto (`tipo`, `nombre`, `descripcion?`, `lat`, `lng`) |
 | PUT | `/api/sedes/:id/mapa/puntos/:idPunto` | Administrador | Mueve o edita un punto (campos parciales) |
 | DELETE | `/api/sedes/:id/mapa/puntos/:idPunto` | Administrador | Elimina un punto |
+| POST | `/api/sedes/:id/mapa/rutas` | Administrador | Traza una ruta: `nombre`, `trazado` (`[[lat, lng], …]`, de 2 a 200 puntos), `origen?`, `destino?`, `descripcion?` |
+| PUT | `/api/sedes/:id/mapa/rutas/:idRuta` | Administrador | Edita una ruta (campos parciales) |
+| DELETE | `/api/sedes/:id/mapa/rutas/:idRuta` | Administrador | Elimina una ruta |
 | GET | `/api/alertas/activa` | Sesión | HU-09: alerta activa que le aplica a la persona, con su respuesta |
 | POST | `/api/alertas` | Administrador o brigadista | Envía una alerta: `sedeId`, `tipo`, `instrucciones` |
 | POST | `/api/alertas/:id/finalizar` | Administrador o brigadista | Da por terminada la emergencia |
@@ -106,8 +131,9 @@ Las respuestas de error tienen la forma `{ "error": { "codigo", "mensaje", "camp
 - Se dibuja sobre el mapa real con latitud y longitud (`mapa_punto` y `mapa_ruta`).
 - Las rutas guardan su trazado como `[[lat, lng], …]`; el frontend dibuja flechas en el sentido de evacuación.
 - Tipos de punto: `punto_encuentro`, `salida`, `extintor`, `botiquin` y `camilla`.
-- Solo el administrador agrega, mueve o elimina puntos; cada cambio se avisa por tiempo real
+- Solo el administrador agrega, mueve o elimina puntos y rutas; cada cambio se avisa por tiempo real
   (`mapa:actualizado`) y el mapa se refresca para todos los que lo tienen abierto.
+- Las rutas se trazan en el modo edición tocando el mapa desde el origen hasta el punto seguro.
 
 ### Alertas de emergencia
 
@@ -177,6 +203,13 @@ La sesión se revisa cada minuto: si se cierra o vence, el servidor envía `sesi
 - Contraseñas con `scrypt` y sal aleatoria; los tokens de sesión e invitación se guardan como hash SHA-256.
 - Sesiones en el servidor: expiran por inactividad, duran como máximo 12 horas y se cierran al desactivar al usuario.
 - El inicio de sesión responde igual (y tarda lo mismo) exista o no el correo.
-- Límite de 10 intentos fallidos de inicio de sesión cada 15 minutos por IP.
-- Cada consulta de usuarios se filtra por la empresa de quien la hace.
+- Límite de intentos fallidos de inicio de sesión: 10 cada 15 minutos por IP y correo, y 100 por IP.
+  Los contadores viven en PostgreSQL (`limite_intentos`), así que se comparten entre instancias.
+- Cada consulta se filtra por la empresa de quien la hace.
 - Si el administrador asigna la contraseña, la persona solo puede cambiarla hasta que elija una propia: el resto de la API responde `CAMBIO_CONTRASENA_REQUERIDO`.
+- Ley 1581 de 2012: se guarda quién aceptó la política de datos, qué versión y cuándo
+  (`consentimiento_datos`). Quien no la ha aceptado solo puede hacerlo o salir: el resto de la API
+  responde `CONSENTIMIENTO_REQUERIDO`. Al cambiar `VERSION_POLITICA` todos deben aceptarla de nuevo.
+- Los nombres y direcciones no aceptan `<` ni `>`, y el frontend los muestra siempre como texto.
+- La recuperación de contraseña usa enlaces de un solo uso que vencen en una hora y se guardan como hash.
+- El seed de demostración (contraseñas conocidas) no corre en producción.

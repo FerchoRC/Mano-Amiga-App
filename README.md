@@ -43,6 +43,7 @@ Mano-Amiga-App/
 │   │   ├── services/          # sesiones, invitaciones, correo, sedes, búsqueda de direcciones
 │   │   ├── app.js             # aplicación Express
 │   │   └── index.js           # arranque del servidor
+│   ├── assets/fonts/          # Inter y Poppins (licencia OFL) para el PDF de auditoría
 │   ├── test/                  # pruebas de integración
 │   └── README.md              # detalle de la API, endpoints y seguridad
 ├── frontend/
@@ -54,8 +55,10 @@ Mano-Amiga-App/
 │   │   ├── lib/               # cliente de la API, roles, NIT, formatos, validaciones
 │   │   ├── pages/             # inicio, registro, equipo, sedes y plan de emergencias
 │   │   └── styles/global.css  # tokens de diseño (colores, tipografía, espaciado)
-│   ├── vite.config.js         # en desarrollo redirige /api al backend
-│   └── vercel.json            # configuración para desplegar en Vercel
+│   ├── vite.config.js         # en desarrollo redirige /api y /ws al backend
+│   └── vercel.json            # despliegue en Vercel y cabeceras de seguridad (CSP)
+├── .github/                   # integración continua y plantilla de PR
+├── CONTRIBUTING.md            # cómo trabajamos: tablero, ramas, commits y "terminado"
 └── package.json               # scripts para levantar ambos a la vez
 ```
 
@@ -65,7 +68,7 @@ Mano-Amiga-App/
 
 ### Requisitos
 
-- [Node.js](https://nodejs.org/) 20 o superior
+- [Node.js](https://nodejs.org/) 20.19 o superior (22 recomendado)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) abierto (para la base de datos)
 
 ### 1. Base de datos
@@ -87,9 +90,8 @@ guardan en un volumen de Docker y no se pierden al reiniciar.
 cd backend
 cp .env.example .env      # en Windows (cmd): copy .env.example .env
 npm install
-npm run db:migrate        # crea o actualiza las tablas
 npm run db:seed           # empresa demo con usuarios, sedes y planes (opcional)
-npm run dev               # http://localhost:4000
+npm run dev               # http://localhost:4000 (crea o actualiza las tablas al arrancar)
 ```
 
 ### 3. Frontend (en otra terminal)
@@ -117,13 +119,16 @@ npm run dev
 
 | Dónde | Comando | Qué hace |
 | --- | --- | --- |
-| `backend/` | `npm run dev` | API con recarga automática |
+| `backend/` | `npm run dev` | API con recarga automática; aplica el esquema al arrancar |
 | `backend/` | `npm start` | API sin recarga |
-| `backend/` | `npm run db:migrate` | Aplica `src/db/schema.sql`; se puede correr varias veces |
+| `backend/` | `npm run db:migrate` | Aplica `src/db/schema.sql` sin arrancar la API |
 | `backend/` | `npm run db:seed` | Recrea la empresa demo |
 | `backend/` | `npm test` | Pruebas de integración (requiere la base levantada) |
+| `backend/` y `frontend/` | `npm run lint` | ESLint |
 | `frontend/` | `npm run dev` | Servidor de desarrollo de Vite |
+| `frontend/` | `npm test` | Pruebas de la lógica del frontend (Vitest) |
 | `frontend/` | `npm run build` | Compila para producción en `dist/` |
+| `frontend/` | `npm run preview` | Sirve `dist/` con las mismas cabeceras de seguridad de Vercel |
 | raíz | `npm run dev` | Backend y frontend a la vez |
 
 ---
@@ -181,25 +186,38 @@ La lista completa de endpoints, tablas y medidas de seguridad está en
 ## Pruebas
 
 ```bash
-cd backend
-npm test
+cd backend && npm test     # 85 pruebas de integración contra PostgreSQL real
+cd frontend && npm test    # 15 pruebas de la lógica del frontend
 ```
 
-Son 71 pruebas de integración contra PostgreSQL real, una o más por cada criterio de aceptación de
-HU-01 a HU-13. Cada prueba crea sus propios datos y los borra al terminar.
+Hay una o más pruebas por cada criterio de aceptación de HU-01 a HU-13, y por cada corrección de
+la auditoría. Cada prueba crea sus propios datos y los borra al terminar. GitHub Actions corre el
+linter, las pruebas y el build en cada PR (`.github/workflows/ci.yml`).
 
 ---
 
-## Despliegue (planeado)
+## Despliegue
 
 Según el documento del proyecto, sección 06:
 
 | Parte | Servicio |
 | --- | --- |
-| Frontend | Vercel (`frontend/vercel.json` ya redirige todas las rutas a la aplicación) |
-| Backend | Render |
-| Base de datos | PostgreSQL en Render; aplicar el esquema con `npm run db:migrate` |
-| Correos | Resend |
+| Frontend | Vercel (`frontend/vercel.json` redirige las rutas a la aplicación y agrega CSP y otras cabeceras) |
+| Backend | Render (aplica el esquema solo al arrancar) |
+| Base de datos | PostgreSQL en Render |
+| Correos | Resend (invitaciones, recuperación de contraseña y avisos de alerta) |
 
-En producción hay que definir `NODE_ENV=production`, `APP_URL` con la URL pública del frontend y
-`VITE_API_URL` con la de la API.
+Variables:
+
+| Dónde | Variable | Valor |
+| --- | --- | --- |
+| Backend | `NODE_ENV` | `production` |
+| Backend | `DATABASE_URL` | La conexión que entrega Render |
+| Backend | `APP_URL` | URL pública del frontend, p. ej. `https://manoamiga.vercel.app` |
+| Backend | `DATABASE_SSL` | `verificar`; `sin-verificar` solo si el proveedor usa un certificado propio |
+| Backend | `RESEND_API_KEY` y `MAIL_FROM` | Clave de Resend y remitente verificado |
+| Frontend | `VITE_API_URL` | URL pública de la API, p. ej. `https://manoamiga-api.onrender.com` |
+
+El tiempo real se conecta a `VITE_API_URL` con `/ws` (o a `VITE_WS_URL`, si se define). Antes de la
+primera entrega, confirmar el correo de contacto de la política de datos
+(`frontend/src/pages/legal/PoliticaDatosPage.jsx`).
