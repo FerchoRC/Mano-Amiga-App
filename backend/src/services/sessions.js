@@ -3,6 +3,7 @@ import { env } from '../config/env.js';
 import { formatNit } from '../lib/nit.js';
 import { permisosDe } from '../lib/roles.js';
 import { generateToken, hashToken } from '../lib/tokens.js';
+import { VERSION_POLITICA } from './consentimiento.js';
 
 // Abre una sesión nueva y devuelve el token en claro (solo se entrega una vez).
 export async function createSession(db, idUsuario) {
@@ -46,11 +47,13 @@ export async function getSessionPayload(db, idUsuario) {
     `SELECT u.id_usuario, u.nombre, u.correo, u.rol, u.debe_cambiar_contrasena,
             u.id_sede, (SELECT nombre FROM sede WHERE id_sede = u.id_sede) AS sede_nombre,
             e.id_empresa, e.nit, e.digito_verificacion, e.razon_social, e.sector,
-            e.num_empleados, e.creado_en
+            e.num_empleados, e.creado_en,
+            EXISTS (SELECT 1 FROM consentimiento_datos c
+                     WHERE c.id_usuario = u.id_usuario AND c.version_politica = $2) AS consintio
        FROM usuario u
        JOIN empresa e USING (id_empresa)
       WHERE u.id_usuario = $1`,
-    [idUsuario]
+    [idUsuario, VERSION_POLITICA]
   );
   const row = rows[0];
 
@@ -61,6 +64,8 @@ export async function getSessionPayload(db, idUsuario) {
       correo: row.correo,
       rol: row.rol,
       debeCambiarContrasena: row.debe_cambiar_contrasena,
+      // Debe aceptar la política de datos vigente antes de usar la plataforma.
+      consentimientoPendiente: !row.consintio,
       sede: row.id_sede ? { id: row.id_sede, nombre: row.sede_nombre } : null,
     },
     empresa: toEmpresaDto(row),

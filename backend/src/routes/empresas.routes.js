@@ -6,10 +6,18 @@ import { AppError, PG_UNIQUE_VIOLATION } from '../lib/errors.js';
 import { hashPassword } from '../lib/passwords.js';
 import { parseNit } from '../lib/nit.js';
 import { SECTORES } from '../lib/sectores.js';
-import { contrasenaSchema, correoSchema, nombreSchema, validateBody } from '../lib/validation.js';
+import {
+  contrasenaSchema,
+  correoSchema,
+  MENSAJE_SIN_HTML,
+  nombreSchema,
+  SIN_HTML,
+  validateBody,
+} from '../lib/validation.js';
 import { authenticate } from '../middleware/auth.js';
 import { publicLimiter } from '../middleware/rateLimit.js';
 import { createSession, getSessionPayload, toEmpresaDto } from '../services/sessions.js';
+import { registrarConsentimiento } from '../services/consentimiento.js';
 
 const MENSAJE_NIT_INVALIDO =
   'El NIT no es válido. Revisa los 9 dígitos y el dígito de verificación.';
@@ -30,7 +38,8 @@ const registroSchema = z.object({
       .string('Escribe la razón social.')
       .trim()
       .min(2, 'Escribe la razón social.')
-      .max(150, 'La razón social es demasiado larga.'),
+      .max(150, 'La razón social es demasiado larga.')
+      .regex(SIN_HTML, MENSAJE_SIN_HTML),
     sector: z.enum(SECTORES, 'Elige el sector de tu empresa.'),
     numEmpleados: z.coerce
       .number('Escribe el número de empleados.')
@@ -81,6 +90,7 @@ router.post('/', publicLimiter, validateBody(registroSchema), async (req, res) =
         [nueva.id_empresa, administrador.nombre, administrador.correo, contrasenaHash]
       );
 
+      await registrarConsentimiento(db, admin.id_usuario, req.ip);
       const token = await createSession(db, admin.id_usuario);
       return { token, payload: await getSessionPayload(db, admin.id_usuario) };
     });

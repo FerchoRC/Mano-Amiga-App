@@ -52,7 +52,7 @@ export async function invitarYAceptar(tokenAdmin, rol) {
   const tokenInvitacion = invitacion.body.enlace.split('/invitacion/')[1];
   const aceptada = await api()
     .post(`/api/invitaciones/${tokenInvitacion}/aceptar`)
-    .send({ nombre: `Persona ${rol}`, contrasena: CONTRASENA });
+    .send({ nombre: `Persona ${rol}`, contrasena: CONTRASENA, aceptaTratamientoDatos: true });
   assert.equal(aceptada.status, 201);
 
   return { id: invitacion.body.usuario.id, correo, token: aceptada.body.token };

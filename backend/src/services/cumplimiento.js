@@ -301,29 +301,29 @@ function indicadorEquipos(sedes, hoy) {
 }
 
 function indicadorMapa(sedes) {
-  // Punto de encuentro y cómo salir: una salida de emergencia marcada o una ruta trazada.
-  const tieneSalida = (s) => s.mapa.salidas > 0 || s.mapa.rutas > 0;
-  const completa = (s) => s.mapa.puntos_encuentro > 0 && tieneSalida(s);
+  // HU-07: cada sede muestra a dónde ir (punto de encuentro) y cómo llegar (ruta trazada).
+  const tieneRuta = (s) => s.mapa.rutas > 0;
+  const completa = (s) => s.mapa.puntos_encuentro > 0 && tieneRuta(s);
   const listas = sedes.filter(completa);
   const pct = porcentaje(listas.length, sedes.length);
   const pendientes = sedes.filter((s) => !completa(s));
-  const conAlgo = sedes.some((s) => s.mapa.puntos_encuentro > 0 || tieneSalida(s));
+  const conAlgo = sedes.some((s) => s.mapa.puntos_encuentro > 0 || tieneRuta(s));
 
   return {
     id: 'mapa_evacuacion',
     titulo: 'Mapa de evacuación',
     estado: pct >= 100 ? 'verde' : conAlgo ? 'amarillo' : 'rojo',
     porcentaje: pct,
-    resumen: `${listas.length} de ${plural(sedes.length, 'sede', 'sedes')} con punto de encuentro y salida en el mapa.`,
+    resumen: `${listas.length} de ${plural(sedes.length, 'sede', 'sedes')} con punto de encuentro y ruta de evacuación.`,
     queFalta: pendientes.length
-      ? `El mapa de cada sede debe mostrar al menos un punto de encuentro y una salida de emergencia o ruta de evacuación. Faltan en ${lista(pendientes)}.`
-      : 'Todas las sedes tienen punto de encuentro y salida de emergencia en su mapa.',
+      ? `El mapa de cada sede debe mostrar al menos un punto de encuentro y una ruta de evacuación trazada hasta él. Faltan en ${lista(pendientes)}.`
+      : 'Todas las sedes tienen punto de encuentro y ruta de evacuación en su mapa.',
     norma: 'Decreto 1072 de 2015, art. 2.2.4.6.25',
     accion: { texto: 'Ir al mapa', ruta: '/mapa' },
     detalles: sedes.map((s) => {
       const falta = [
         !s.mapa.puntos_encuentro && 'punto de encuentro',
-        !tieneSalida(s) && 'salida de emergencia o ruta',
+        !tieneRuta(s) && 'ruta de evacuación',
       ].filter(Boolean);
       const tiene = [
         s.mapa.puntos_encuentro && plural(s.mapa.puntos_encuentro, 'punto de encuentro', 'puntos de encuentro'),

@@ -2,9 +2,11 @@
 import { pathToFileURL } from 'node:url';
 
 import { pool, withTransaction } from '../config/db.js';
+import { env } from '../config/env.js';
 import { calcularDigitoVerificacion } from '../lib/nit.js';
 import { hashPassword } from '../lib/passwords.js';
 import { limpiarContenido, plantillaPlan } from '../lib/plan.js';
+import { registrarConsentimiento } from '../services/consentimiento.js';
 import { issueInvitation } from '../services/invitations.js';
 import { migrate } from './migrate.js';
 
@@ -139,6 +141,10 @@ const SEDES = [
 ];
 
 async function seed() {
+  // Las cuentas de demostración tienen una contraseña conocida: nunca en producción.
+  if (env.isProduction) {
+    throw new Error('El seed de demostración no se puede correr en producción.');
+  }
   await migrate();
   const hash = await hashPassword(CONTRASENA_DEMO);
 
@@ -167,6 +173,8 @@ async function seed() {
       );
       idAdmin ??= creado.id_usuario;
       idPorCorreo[u.correo] = creado.id_usuario;
+      // Las cuentas demo ya aceptaron la política de datos, como si se hubieran registrado.
+      await registrarConsentimiento(db, creado.id_usuario);
     }
 
     // Tres sedes: una con plan aprobado, otra con plan en borrador y otra sin plan.

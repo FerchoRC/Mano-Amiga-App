@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { pool } from '../config/db.js';
 import { notFound } from '../lib/errors.js';
 import { PERMISOS } from '../lib/roles.js';
-import { uuidSchema, validateBody } from '../lib/validation.js';
+import { MENSAJE_SIN_HTML, SIN_HTML, uuidSchema, validateBody } from '../lib/validation.js';
 import { authenticate, requirePermission } from '../middleware/auth.js';
 import { findSede } from '../services/sedes.js';
 
@@ -22,8 +22,8 @@ const fecha = z
 
 const camposEquipo = {
   tipo: z.enum(TIPOS, 'Elige el tipo de equipo.'),
-  nombre: z.string('Escribe el nombre o código del equipo.').trim().min(2, 'Escribe el nombre o código del equipo.').max(120, 'Máximo 120 caracteres.'),
-  ubicacion: z.string('Indica dónde está el equipo.').trim().min(2, 'Indica dónde está el equipo.').max(200, 'Máximo 200 caracteres.'),
+  nombre: z.string('Escribe el nombre o código del equipo.').trim().min(2, 'Escribe el nombre o código del equipo.').max(120, 'Máximo 120 caracteres.').regex(SIN_HTML, MENSAJE_SIN_HTML),
+  ubicacion: z.string('Indica dónde está el equipo.').trim().min(2, 'Indica dónde está el equipo.').max(200, 'Máximo 200 caracteres.').regex(SIN_HTML, MENSAJE_SIN_HTML),
   // Vacío o null: el equipo no vence (p. ej. una camilla).
   fechaVencimiento: z.union([fecha, z.literal(''), z.null()]).transform((v) => v || null),
   estado: z.enum(ESTADOS, 'Elige un estado válido.'),

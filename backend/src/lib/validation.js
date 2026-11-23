@@ -10,11 +10,17 @@ export const correoSchema = z
   .max(254, 'El correo es demasiado largo.')
   .pipe(z.email('Escribe un correo válido.'));
 
+// Los nombres y direcciones se muestran en el mapa, en correos y en el PDF. Aunque el
+// frontend los trata como texto, se rechazan < y > para que nunca puedan ser HTML.
+export const SIN_HTML = /^[^<>]*$/;
+export const MENSAJE_SIN_HTML = 'No uses los signos < ni >.';
+
 export const nombreSchema = z
   .string('Escribe el nombre.')
   .trim()
   .min(2, 'Escribe el nombre completo.')
-  .max(120, 'El nombre es demasiado largo.');
+  .max(120, 'El nombre es demasiado largo.')
+  .regex(SIN_HTML, MENSAJE_SIN_HTML);
 
 export const contrasenaSchema = z
   .string('Escribe una contraseña.')

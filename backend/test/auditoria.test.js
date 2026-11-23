@@ -157,7 +157,10 @@ describe('HU-13 · Panel de cumplimiento', () => {
     await registrarSimulacro(token, sede);
     await registrarEquipo(token, sede);
     await agregarPunto(token, sede, 'punto_encuentro');
-    await agregarPunto(token, sede, 'salida');
+    await api()
+      .post(`/api/sedes/${sede}/mapa/rutas`)
+      .set(...auth(token))
+      .send({ nombre: 'Ruta principal', trazado: [[6.1752, -75.6052], [6.1758, -75.6045]] });
 
     const res = await cumplimiento(token);
     for (const ind of res.body.indicadores) assert.equal(ind.estado, 'verde', `${ind.id}: ${ind.queFalta}`);

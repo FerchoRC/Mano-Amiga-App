@@ -196,6 +196,18 @@ describe('HU-03 · Gestión de usuarios y roles', () => {
       .send({ contrasenaNueva: 'Propia2026' });
     assert.equal(cambio.status, 200);
     assert.equal(cambio.body.usuario.debeCambiarContrasena, false);
+
+    // Ley 1581: quien recibió la cuenta del administrador acepta la política al entrar.
+    assert.equal(cambio.body.usuario.consentimientoPendiente, true);
+    const sinConsentir = await api().get('/api/empresas/actual').set(...auth(login.body.token));
+    assert.equal(sinConsentir.status, 403);
+    assert.equal(sinConsentir.body.error.codigo, 'CONSENTIMIENTO_REQUERIDO');
+    const acepta = await api()
+      .post('/api/auth/consentimiento')
+      .set(...auth(login.body.token))
+      .send({ acepta: true });
+    assert.equal(acepta.status, 200);
+    assert.equal(acepta.body.usuario.consentimientoPendiente, false);
     assert.equal((await api().get('/api/empresas/actual').set(...auth(login.body.token))).status, 200);
   });
 
