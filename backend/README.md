@@ -5,7 +5,7 @@ API REST con Express 5 y PostgreSQL.
 ## Scripts
 
 ```bash
-npm run dev          # servidor con recarga automática (aplica el esquema al arrancar)
+npm run dev          # servidor con recarga automática (node --watch; aplica el esquema al arrancar)
 npm start            # servidor
 npm run db:migrate   # aplica src/db/schema.sql sin arrancar el servidor (idempotente)
 npm run db:seed      # recrea la empresa demo (bloqueado en producción)
