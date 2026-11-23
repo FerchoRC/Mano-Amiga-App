@@ -43,3 +43,22 @@
     justify-content: flex-end;
   }
 }
+
+/* Botón sin fondo sobre la barra oscura. */
+.claro {
+  color: #fff;
+}
+
+.claro:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.claro:disabled {
+  color: rgb(255 255 255 / 0.45);
+}
+
+@media (max-width: 559px) {
+  .actions {
+    flex-wrap: wrap;
+  }
+}

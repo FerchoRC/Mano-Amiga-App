@@ -1,0 +1,51 @@
+.pagina {
+  min-height: 100dvh;
+  background: var(--bg);
+  padding: 0 var(--gutter) 64px;
+}
+
+.cabecera {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+.texto {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px clamp(20px, 5vw, 48px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  line-height: 1.65;
+}
+
+.texto h1 {
+  margin: 6px 0 16px;
+  font-size: clamp(24px, 4vw, 30px);
+  color: var(--navy);
+}
+
+.texto h2 {
+  margin: 28px 0 8px;
+  font-size: 18px;
+  color: var(--navy);
+}
+
+.texto p,
+.texto ul {
+  margin: 0 0 12px;
+  max-width: 68ch;
+}
+
+.texto ul {
+  padding-left: 20px;
+}
+
+.texto li + li {
+  margin-top: 4px;
+}
+
+.volver {
+  margin-top: 28px;
+}

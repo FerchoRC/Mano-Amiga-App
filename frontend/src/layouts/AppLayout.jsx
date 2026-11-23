@@ -2,10 +2,12 @@ import {
   Boxes,
   Building2,
   Ellipsis,
+  FileDown,
   House,
   KeyRound,
   LogOut,
   Map as MapIcon,
+  ShieldCheck,
   ShieldPlus,
   Siren,
   Users,
@@ -19,6 +21,7 @@ import AlertaGlobal from '../components/AlertaGlobal.jsx';
 import Avatar from '../components/Avatar.jsx';
 import Button from '../components/Button.jsx';
 import Dialog from '../components/Dialog.jsx';
+import ErrorBoundary from '../components/ErrorBoundary.jsx';
 import Logo from '../components/Logo.jsx';
 import Menu from '../components/Menu.jsx';
 import { useToast } from '../components/Toast.jsx';
@@ -35,6 +38,8 @@ const NAV = [
   { to: '/sedes', label: 'Sedes', icon: Building2, permiso: PERMISOS.SEDES_VER },
   // "Inventario" y no "Equipos", para no confundirlo con "Equipo" (las personas).
   { to: '/equipos', label: 'Inventario', icon: Boxes, permiso: PERMISOS.EQUIPOS_VER },
+  { to: '/cumplimiento', label: 'Cumplimiento', icon: ShieldCheck, permiso: PERMISOS.CUMPLIMIENTO_VER },
+  { to: '/reportes', label: 'Reportes', icon: FileDown, permiso: PERMISOS.REPORTES_VER },
   { to: '/equipo', label: 'Equipo', icon: Users, permiso: PERMISOS.USUARIOS_GESTIONAR },
 ];
 
@@ -47,6 +52,9 @@ export default function AppLayout() {
   const location = useLocation();
   const toast = useToast();
   const { usuario, empresa } = session;
+  // Con contraseña temporal o sin aceptar la política de datos, la persona solo puede
+  // terminar ese paso: no hay navegación ni alertas (el backend lo bloquea igual).
+  const restringido = usuario.debeCambiarContrasena || usuario.consentimientoPendiente;
 
   const [alertaDialog, setAlertaDialog] = useState(false);
   const [sedes, setSedes] = useState([]);
@@ -61,7 +69,7 @@ export default function AppLayout() {
   }, [can]);
 
   // Mientras tenga contraseña temporal no hay navegación: solo puede cambiarla.
-  const items = usuario.debeCambiarContrasena
+  const items = restringido
     ? []
     : NAV.filter((item) => !item.permiso || can(item.permiso));
 
@@ -71,7 +79,7 @@ export default function AppLayout() {
   const [masAbierto, setMasAbierto] = useState(false);
 
   const opcionesCuenta = [
-    !usuario.debeCambiarContrasena && {
+    !restringido && {
       label: 'Cambiar contraseña',
       icon: KeyRound,
       onSelect: () => navigate(RUTA_CAMBIAR_CONTRASENA),
@@ -87,7 +95,7 @@ export default function AppLayout() {
   };
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${hayMas ? styles.muchasSecciones : ''}`}>
       <header className={styles.header}>
         <div className={styles.bar}>
           <Link to="/inicio" className={styles.brand}>
@@ -108,7 +116,7 @@ export default function AppLayout() {
           )}
 
           <div className={styles.account}>
-            {can(PERMISOS.ALERTAS_ENVIAR) && !usuario.debeCambiarContrasena && (
+            {can(PERMISOS.ALERTAS_ENVIAR) && !restringido && (
               <Button
                 variant="danger"
                 size="sm"
@@ -137,7 +145,7 @@ export default function AppLayout() {
         </div>
       </header>
 
-      {!usuario.debeCambiarContrasena && <AlertaGlobal />}
+      {!restringido && <AlertaGlobal />}
 
       <main className={styles.main}>
         <Suspense
@@ -147,7 +155,9 @@ export default function AppLayout() {
             </div>
           }
         >
-          <Outlet />
+          <ErrorBoundary resetKey={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </Suspense>
       </main>
 

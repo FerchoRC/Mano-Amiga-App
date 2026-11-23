@@ -8,12 +8,15 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.routes.js';
 import alertasRoutes from './routes/alertas.routes.js';
 import brigadasRoutes from './routes/brigadas.routes.js';
+import cumplimientoRoutes from './routes/cumplimiento.routes.js';
 import empresasRoutes from './routes/empresas.routes.js';
 import equiposRoutes from './routes/equipos.routes.js';
 import invitacionesRoutes from './routes/invitaciones.routes.js';
 import mapaRoutes from './routes/mapa.routes.js';
 import planesRoutes from './routes/planes.routes.js';
+import reportesRoutes from './routes/reportes.routes.js';
 import sedesRoutes from './routes/sedes.routes.js';
+import simulacrosRoutes from './routes/simulacros.routes.js';
 import usuariosRoutes from './routes/usuarios.routes.js';
 
 export function createApp() {
@@ -41,9 +44,12 @@ export function createApp() {
   app.use('/api/invitaciones', invitacionesRoutes);
   app.use('/api/sedes/:idSede/plan', planesRoutes);
   app.use('/api/sedes/:idSede/mapa', mapaRoutes);
+  app.use('/api/sedes/:idSede/simulacros', simulacrosRoutes);
   app.use('/api/sedes', sedesRoutes);
   app.use('/api/brigadas', brigadasRoutes);
   app.use('/api/alertas', alertasRoutes);
+  app.use('/api/cumplimiento', cumplimientoRoutes);
+  app.use('/api/reportes', reportesRoutes);
   app.use('/api', equiposRoutes);
 
   app.use(notFoundHandler);

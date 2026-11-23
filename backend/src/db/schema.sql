@@ -218,3 +218,52 @@ ALTER TABLE alerta ALTER CONSTRAINT alerta_id_empresa_fkey DEFERRABLE INITIALLY 
 ALTER TABLE alerta ALTER CONSTRAINT alerta_id_sede_fkey DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE alerta ALTER CONSTRAINT alerta_id_usuario_fkey DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE alerta ALTER CONSTRAINT alerta_finalizado_por_fkey DEFERRABLE INITIALLY DEFERRED;
+
+-- HU-13: Constancia de simulacros de evacuación realizados por sede.
+CREATE TABLE IF NOT EXISTS simulacro (
+  id_simulacro      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_sede           uuid          NOT NULL REFERENCES sede (id_sede) ON DELETE CASCADE,
+  -- Diferida por el mismo motivo que las de alerta: al borrar la empresa se llega por sede y por usuario.
+  id_usuario        uuid          REFERENCES usuario (id_usuario) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
+  fecha             date          NOT NULL,
+  participantes     integer       NOT NULL CHECK (participantes >= 0),
+  tiempo_evacuacion varchar(20),
+  observaciones     text,
+  plan_mejora       text,
+  creado_en         timestamptz   NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS simulacro_sede_fecha_idx ON simulacro (id_sede, fecha DESC);
+-- Bases creadas con la primera versión de la tabla: la llave también debe ser diferida.
+ALTER TABLE simulacro ALTER CONSTRAINT simulacro_id_usuario_fkey DEFERRABLE INITIALLY DEFERRED;
+
+-- Ley 1581 de 2012 y Decreto 1377 de 2013: prueba de la autorización para tratar datos.
+-- Una fila por persona y versión de la política que aceptó.
+CREATE TABLE IF NOT EXISTS consentimiento_datos (
+  id_consentimiento uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_usuario        uuid        NOT NULL REFERENCES usuario (id_usuario) ON DELETE CASCADE,
+  version_politica  varchar(20) NOT NULL,
+  aceptado_en       timestamptz NOT NULL DEFAULT now(),
+  ip                varchar(45),
+  UNIQUE (id_usuario, version_politica)
+);
+
+-- Recuperación de contraseña por correo: enlace de un solo uso que vence en una hora.
+CREATE TABLE IF NOT EXISTS recuperacion (
+  id_recuperacion uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_usuario      uuid        NOT NULL REFERENCES usuario (id_usuario) ON DELETE CASCADE,
+  token_hash      char(64)    NOT NULL UNIQUE,
+  expira_en       timestamptz NOT NULL,
+  usado_en        timestamptz,
+  creado_en       timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS recuperacion_usuario_idx ON recuperacion (id_usuario);
+
+-- Contadores del límite de intentos de inicio de sesión, compartidos entre instancias
+-- del backend y que sobreviven a un reinicio.
+CREATE TABLE IF NOT EXISTS limite_intentos (
+  clave       varchar(300) PRIMARY KEY,
+  intentos    integer      NOT NULL,
+  reinicia_en timestamptz  NOT NULL
+);

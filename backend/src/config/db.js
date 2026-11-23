@@ -8,9 +8,22 @@ const { Pool, types } = pg;
 // Convertirlas a Date las movería un día según la zona horaria del servidor.
 types.setTypeParser(types.builtins.DATE, (valor) => valor);
 
+const SSL = {
+  verificar: { rejectUnauthorized: true },
+  'sin-verificar': { rejectUnauthorized: false },
+  no: false,
+};
+
 export const pool = new Pool({
   connectionString: env.databaseUrl,
-  ssl: env.isProduction ? { rejectUnauthorized: false } : false,
+  ssl: SSL[env.databaseSsl],
+});
+
+// Si se cae una conexión que estaba libre (reinicio de la base o de la red), pg emite
+// 'error' en el pool. Sin este manejador Node lo trata como no capturado y se cierra.
+// El pool descarta esa conexión y abre otra en la siguiente consulta.
+pool.on('error', (error) => {
+  console.error('[db] Se perdió una conexión inactiva con la base:', error.message);
 });
 
 export async function testDatabaseConnection() {

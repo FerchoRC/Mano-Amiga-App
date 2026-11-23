@@ -2,6 +2,7 @@ import { HardHat, ShieldCheck, UserRound } from 'lucide-react';
 
 // Coinciden con backend/src/lib/roles.js
 export const PERMISOS = {
+  EMPRESA_VER: 'empresa:ver',
   USUARIOS_GESTIONAR: 'usuarios:gestionar',
   SEDES_VER: 'sedes:ver',
   SEDES_GESTIONAR: 'sedes:gestionar',
@@ -15,6 +16,9 @@ export const PERMISOS = {
   ALERTAS_ENVIAR: 'alertas:enviar',
   EQUIPOS_VER: 'equipos:ver',
   EQUIPOS_GESTIONAR: 'equipos:gestionar',
+  SIMULACROS_GESTIONAR: 'simulacros:gestionar',
+  REPORTES_VER: 'reportes:ver',
+  CUMPLIMIENTO_VER: 'cumplimiento:ver',
 };
 
 // Descripción de cada rol tal como lo entiende el negocio (documento, sección 07).

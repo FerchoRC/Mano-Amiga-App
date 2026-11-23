@@ -360,7 +360,15 @@ export default function RegisterPage() {
             checked={datos.acepta}
             onChange={set('acepta')}
             error={errores.acepta}
-            label="Autorizo el tratamiento de los datos de mi empresa y sus trabajadores conforme a la Ley 1581 de 2012."
+            label={
+              <>
+                Autorizo el tratamiento de los datos de mi empresa y sus trabajadores según la{' '}
+                <Link to="/politica-de-datos" target="_blank" rel="noopener">
+                  política de tratamiento de datos
+                </Link>{' '}
+                (Ley 1581 de 2012).
+              </>
+            }
           />
 
           <div className={styles.actions}>

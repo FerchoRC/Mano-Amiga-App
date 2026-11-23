@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { pool } from '../config/db.js';
 import { notFound } from '../lib/errors.js';
 import { PERMISOS } from '../lib/roles.js';
-import { uuidSchema, validateBody } from '../lib/validation.js';
+import { MENSAJE_SIN_HTML, SIN_HTML, uuidSchema, validateBody } from '../lib/validation.js';
 import { authenticate, requirePermission } from '../middleware/auth.js';
 import { realtime } from '../services/realtime.js';
 import { findSede } from '../services/sedes.js';
@@ -66,8 +66,8 @@ const MENSAJE_UBICACION = 'Marca la ubicación del punto en el mapa.';
 
 const camposPunto = {
   tipo: z.enum(TIPOS_PUNTO, 'Elige el tipo de punto.'),
-  nombre: z.string('Escribe el nombre del punto.').trim().min(2, 'Escribe el nombre del punto.').max(120, 'Máximo 120 caracteres.'),
-  descripcion: z.string().trim().max(300, 'La descripción admite máximo 300 caracteres.'),
+  nombre: z.string('Escribe el nombre del punto.').trim().min(2, 'Escribe el nombre del punto.').max(120, 'Máximo 120 caracteres.').regex(SIN_HTML, MENSAJE_SIN_HTML),
+  descripcion: z.string().trim().max(300, 'La descripción admite máximo 300 caracteres.').regex(SIN_HTML, MENSAJE_SIN_HTML),
   lat: z.number(MENSAJE_UBICACION).min(-90, MENSAJE_UBICACION).max(90, MENSAJE_UBICACION),
   lng: z.number(MENSAJE_UBICACION).min(-180, MENSAJE_UBICACION).max(180, MENSAJE_UBICACION),
 };
@@ -138,6 +138,98 @@ router.delete('/puntos/:idPunto', gestionar, async (req, res) => {
   const sede = await findSede(pool, req.auth.usuario.empresaId, req.params.idSede);
   const punto = await findPunto(sede.id_sede, req.params.idPunto);
   await pool.query('DELETE FROM mapa_punto WHERE id_punto = $1', [punto.id_punto]);
+  avisarCambio(req, sede);
+  res.status(204).end();
+});
+
+// Rutas de evacuación (HU-07): el administrador traza el recorrido tocando el mapa, desde
+// el origen hasta el punto seguro. Mismas reglas que los puntos: solo él edita y todos
+// ven el cambio al instante.
+
+const textoRuta = (max, mensaje) =>
+  z.string(mensaje).trim().max(max, `Máximo ${max} caracteres.`).regex(SIN_HTML, MENSAJE_SIN_HTML);
+
+const coordenada = z.tuple([
+  z.number(MENSAJE_UBICACION).min(-90, MENSAJE_UBICACION).max(90, MENSAJE_UBICACION),
+  z.number(MENSAJE_UBICACION).min(-180, MENSAJE_UBICACION).max(180, MENSAJE_UBICACION),
+]);
+
+const camposRuta = {
+  nombre: textoRuta(120, 'Escribe el nombre de la ruta.').min(2, 'Escribe el nombre de la ruta.'),
+  descripcion: textoRuta(300),
+  origen: textoRuta(120),
+  destino: textoRuta(120),
+  trazado: z
+    .array(coordenada, 'Traza la ruta en el mapa.')
+    .min(2, 'Marca al menos dos puntos para trazar la ruta.')
+    .max(200, 'La ruta admite máximo 200 puntos.'),
+};
+
+const crearRutaSchema = z.object({
+  ...camposRuta,
+  descripcion: camposRuta.descripcion.default(''),
+  origen: camposRuta.origen.default(''),
+  destino: camposRuta.destino.default(''),
+});
+const editarRutaSchema = z
+  .object(camposRuta)
+  .partial()
+  .refine((datos) => Object.keys(datos).length > 0, { message: 'No hay cambios para guardar.' });
+
+const toRutaDto = (r) => ({
+  id: r.id_ruta,
+  nombre: r.nombre,
+  descripcion: r.descripcion,
+  origen: r.origen,
+  destino: r.destino,
+  trazado: r.trazado,
+});
+
+async function findRuta(idSede, idRuta) {
+  if (!uuidSchema.safeParse(idRuta).success) throw notFound('No encontramos esa ruta en el mapa.');
+  const { rows } = await pool.query('SELECT * FROM mapa_ruta WHERE id_ruta = $1 AND id_sede = $2', [
+    idRuta,
+    idSede,
+  ]);
+  if (!rows[0]) throw notFound('No encontramos esa ruta en el mapa.');
+  return rows[0];
+}
+
+router.post('/rutas', gestionar, validateBody(crearRutaSchema), async (req, res) => {
+  const sede = await findSede(pool, req.auth.usuario.empresaId, req.params.idSede);
+  const { nombre, descripcion, origen, destino, trazado } = req.body;
+  const {
+    rows: [r],
+  } = await pool.query(
+    `INSERT INTO mapa_ruta (id_sede, nombre, descripcion, origen, destino, trazado)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING *`,
+    [sede.id_sede, nombre, descripcion, origen || null, destino || null, JSON.stringify(trazado)]
+  );
+  avisarCambio(req, sede);
+  res.status(201).json({ ruta: toRutaDto(r) });
+});
+
+router.put('/rutas/:idRuta', gestionar, validateBody(editarRutaSchema), async (req, res) => {
+  const sede = await findSede(pool, req.auth.usuario.empresaId, req.params.idSede);
+  const actual = await findRuta(sede.id_sede, req.params.idRuta);
+  const datos = { ...toRutaDto(actual), ...req.body };
+  const {
+    rows: [r],
+  } = await pool.query(
+    `UPDATE mapa_ruta SET nombre = $2, descripcion = $3, origen = $4, destino = $5, trazado = $6
+      WHERE id_ruta = $1
+  RETURNING *`,
+    [actual.id_ruta, datos.nombre, datos.descripcion, datos.origen || null, datos.destino || null, JSON.stringify(datos.trazado)]
+  );
+  avisarCambio(req, sede);
+  res.json({ ruta: toRutaDto(r) });
+});
+
+router.delete('/rutas/:idRuta', gestionar, async (req, res) => {
+  const sede = await findSede(pool, req.auth.usuario.empresaId, req.params.idSede);
+  const ruta = await findRuta(sede.id_sede, req.params.idRuta);
+  await pool.query('DELETE FROM mapa_ruta WHERE id_ruta = $1', [ruta.id_ruta]);
   avisarCambio(req, sede);
   res.status(204).end();
 });

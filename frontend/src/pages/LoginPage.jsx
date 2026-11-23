@@ -95,6 +95,9 @@ export default function LoginPage() {
           onChange={(e) => setContrasena(e.target.value)}
           error={errores.contrasena}
         />
+        <Link to="/recuperar" state={{ correo }} className={styles.olvido}>
+          ¿Olvidaste tu contraseña?
+        </Link>
 
         <Button type="submit" block loading={enviando}>
           Ingresar

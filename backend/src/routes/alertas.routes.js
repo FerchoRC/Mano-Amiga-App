@@ -2,10 +2,12 @@ import { Router } from 'express';
 import { z } from 'zod';
 
 import { pool } from '../config/db.js';
+import { env } from '../config/env.js';
 import { AppError, PG_UNIQUE_VIOLATION, notFound } from '../lib/errors.js';
 import { PERMISOS } from '../lib/roles.js';
 import { uuidSchema, validateBody } from '../lib/validation.js';
 import { authenticate, requirePermission } from '../middleware/auth.js';
+import { enviarAlerta } from '../services/mailer.js';
 import { realtime } from '../services/realtime.js';
 import { findSede } from '../services/sedes.js';
 
@@ -14,6 +16,17 @@ import { findSede } from '../services/sedes.js';
 // alerta está activa, y los brigadistas ven confirmados y pendientes en tiempo real.
 
 export const TIPOS_EMERGENCIA = ['incendio', 'sismo', 'evacuacion', 'inundacion', 'medica', 'amenaza', 'otra'];
+
+// Para el correo de aviso (en la app, las etiquetas están en frontend/src/lib/alertas.js).
+const ETIQUETA_TIPO = {
+  incendio: 'Incendio',
+  sismo: 'Sismo',
+  evacuacion: 'Evacuación',
+  inundacion: 'Inundación',
+  medica: 'Emergencia médica',
+  amenaza: 'Amenaza',
+  otra: 'Emergencia',
+};
 
 // Destinatarios de una alerta: personas activas de la empresa que pertenecen a
 // la sede de la alerta o que no tienen sede asignada (reciben todas).
@@ -136,15 +149,29 @@ router.post('/', requirePermission(PERMISOS.ALERTAS_ENVIAR), validateBody(enviar
   }
 
   const alerta = await findAlerta(empresaId, creada.id_alerta, idUsuario);
-  const {
-    rows: [{ total }],
-  } = await pool.query(
-    `SELECT count(*)::int AS total FROM usuario u, alerta a WHERE a.id_alerta = $1 AND ${ES_DESTINATARIO}`,
+  const { rows: destinatarios } = await pool.query(
+    `SELECT u.id_usuario, u.nombre, u.correo FROM usuario u, alerta a
+      WHERE a.id_alerta = $1 AND ${ES_DESTINATARIO}`,
     [alerta.id_alerta]
   );
 
   realtime.toEmpresa(empresaId, 'alerta:nueva', { alertaId: alerta.id_alerta, sedeId: alerta.id_sede });
-  res.status(201).json({ alerta: toAlertaDto(alerta), destinatarios: total });
+  res.status(201).json({ alerta: toAlertaDto(alerta), destinatarios: destinatarios.length });
+
+  // Aviso por correo a quien no tenga la app abierta (si Resend está configurado). Va
+  // después de responder: enviar decenas de correos no debe demorar la alerta en la app.
+  const enlace = `${env.appUrl}/inicio`;
+  for (const persona of destinatarios) {
+    if (persona.id_usuario === idUsuario) continue;
+    enviarAlerta({
+      para: persona.correo,
+      nombre: persona.nombre,
+      tipo: ETIQUETA_TIPO[tipo],
+      sede: sede.nombre,
+      instrucciones,
+      enlace,
+    }).catch(() => {});
+  }
 });
 
 // Dar por terminada la emergencia.

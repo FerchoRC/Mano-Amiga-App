@@ -326,3 +326,83 @@
   font-weight: 600;
   color: var(--navy);
 }
+
+.auditoriaActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.auditoriaAction {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease);
+}
+
+.auditoriaActionLabel {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auditoriaActionLabel svg {
+  color: var(--blue);
+}
+
+.auditoriaAction:hover {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: 0 3px 10px rgb(22 50 92 / 0.08);
+  transform: translateY(-1px);
+}
+
+.auditoriaAction:focus-visible {
+  outline: 3px solid rgb(37 92 192 / 0.18);
+  outline-offset: 2px;
+}
+
+.auditoriaAction svg {
+  flex: 0 0 auto;
+}
+
+.quietText {
+  display: grid;
+  gap: 8px;
+}
+
+.quietHint {
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+.quietButton {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.quietButton:hover {
+  text-decoration: underline;
+}

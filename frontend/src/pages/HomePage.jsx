@@ -1,4 +1,4 @@
-import { ArrowRight, BellRing, Check, Scale } from 'lucide-react';
+import { ArrowRight, BellRing, Check, FileText, Scale, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
@@ -7,6 +7,11 @@ import { useToast } from '../components/Toast.jsx';
 import { api } from '../lib/api.js';
 import { fechaCorta, fechaLarga, formatearNumero, primerNombre, saludo } from '../lib/format.js';
 import { PERMISOS, ROLES } from '../lib/roles.js';
+import {
+  notificacionesSoportadas,
+  pedirPermisoNotificaciones,
+  permisoNotificaciones,
+} from '../lib/notificaciones.js';
 import { useRealtimeEvent } from '../lib/useRealtime.js';
 import AlertaBanner from './alertas/AlertaBanner.jsx';
 import ConfirmarEstado from './alertas/ConfirmarEstado.jsx';
@@ -144,6 +149,29 @@ function PrimerosPasos({ empresa }) {
   );
 }
 
+// Pide permiso para mostrar avisos del sistema cuando ManoAmiga está en segundo plano.
+function AvisosNavegador() {
+  const [permiso, setPermiso] = useState(permisoNotificaciones);
+  if (!notificacionesSoportadas()) return null;
+  if (permiso === 'granted') return <p className={styles.quietHint}>Los avisos de este navegador están activos.</p>;
+  if (permiso === 'denied') {
+    return (
+      <p className={styles.quietHint}>
+        Este navegador bloqueó los avisos. Puedes permitirlos desde la configuración del sitio.
+      </p>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={styles.quietButton}
+      onClick={async () => setPermiso(await pedirPermisoNotificaciones())}
+    >
+      Avisarme también en este navegador
+    </button>
+  );
+}
+
 function TuRol({ rol }) {
   const info = ROLES[rol];
   const Icono = info.icono;
@@ -172,10 +200,13 @@ function TuRol({ rol }) {
 
       <section className={`${styles.card} ${styles.quiet}`}>
         <BellRing size={20} aria-hidden="true" />
-        <p>
-          Si se activa una alerta de emergencia en tu sede, la verás aquí de inmediato, con las
-          instrucciones para actuar.
-        </p>
+        <div className={styles.quietText}>
+          <p>
+            Si se activa una alerta de emergencia en tu sede, la verás aquí de inmediato, con las
+            instrucciones para actuar, y también te puede llegar por correo.
+          </p>
+          <AvisosNavegador />
+        </div>
       </section>
     </>
   );
@@ -326,6 +357,36 @@ export default function HomePage() {
               <p>{obligacion(empresa.numEmpleados)}</p>
             </div>
           </section>
+
+          {esAdmin && (
+            <section className={styles.card} aria-labelledby="gestion-sg-sst">
+              <h2 id="gestion-sg-sst" className={styles.small}>
+                Auditoría y cumplimiento
+              </h2>
+              <div className={styles.auditoriaActions}>
+                <Link
+                  to="/cumplimiento"
+                  className={styles.auditoriaAction}
+                >
+                  <span className={styles.auditoriaActionLabel}>
+                    <ShieldCheck size={18} aria-hidden="true" />
+                    <span>Panel de cumplimiento</span>
+                  </span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+                <Link
+                  to="/reportes"
+                  className={styles.auditoriaAction}
+                >
+                  <span className={styles.auditoriaActionLabel}>
+                    <FileText size={18} aria-hidden="true" />
+                    <span>Reporte para auditoría</span>
+                  </span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            </section>
+          )}
         </aside>
       </div>
     </div>

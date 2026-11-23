@@ -12,6 +12,12 @@ export function errorHandler(err, _req, res, _next) {
     });
   }
 
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      error: { codigo: 'CUERPO_DEMASIADO_GRANDE', mensaje: 'La información enviada es demasiado grande.' },
+    });
+  }
+
   if (err.type === 'entity.parse.failed') {
     return res
       .status(400)

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { crearPin, L, useLeafletMap } from './leaflet.js';
+import { crearPin, L, textoSeguro, useLeafletMap } from './leaflet.js';
 
 // Mapa con todas las sedes. Resalta la sede activa y avisa al hacer clic.
 export default function SedesMap({ sedes, activa, onSelect, className = '' }) {
@@ -23,7 +23,7 @@ export default function SedesMap({ sedes, activa, onSelect, className = '' }) {
         title: sede.nombre,
         keyboard: true,
       })
-        .bindTooltip(sede.nombre, { direction: 'top' })
+        .bindTooltip(textoSeguro(sede.nombre), { direction: 'top' })
         .on('click', () => onSelectRef.current?.(sede))
         .addTo(capa);
       marcadores.current.set(sede.id, marcador);

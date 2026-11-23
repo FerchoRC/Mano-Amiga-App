@@ -216,3 +216,24 @@ button.tab {
   font-size: 20px;
   color: var(--text-subtle);
 }
+
+/* Con más de 5 secciones (el administrador) la barra superior no cabe en tabletas ni
+   portátiles pequeños: ahí se usa la barra inferior con "Más", como en el celular. */
+@media (min-width: 760px) and (max-width: 1199px) {
+  .muchasSecciones .nav {
+    display: none;
+  }
+
+  .muchasSecciones .tabbar {
+    display: flex;
+    justify-content: center;
+  }
+
+  .muchasSecciones .tab {
+    max-width: 140px;
+  }
+
+  .muchasSecciones .main {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+}

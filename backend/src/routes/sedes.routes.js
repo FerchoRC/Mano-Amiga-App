@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { pool } from '../config/db.js';
 import { AppError, PG_UNIQUE_VIOLATION } from '../lib/errors.js';
 import { PERMISOS, tienePermiso } from '../lib/roles.js';
-import { validateBody } from '../lib/validation.js';
+import { MENSAJE_SIN_HTML, SIN_HTML, validateBody } from '../lib/validation.js';
 import { authenticate, requirePermission } from '../middleware/auth.js';
 import { geocodingLimiter } from '../middleware/rateLimit.js';
 import { buscarDireccion } from '../services/geocoding.js';
@@ -17,17 +17,20 @@ const sedeSchema = z.object({
     .string('Escribe el nombre de la sede.')
     .trim()
     .min(2, 'Escribe el nombre de la sede.')
-    .max(120, 'El nombre es demasiado largo.'),
+    .max(120, 'El nombre es demasiado largo.')
+    .regex(SIN_HTML, MENSAJE_SIN_HTML),
   direccion: z
     .string('Escribe la dirección de la sede.')
     .trim()
     .min(5, 'Escribe la dirección de la sede.')
-    .max(200, 'La dirección es demasiado larga.'),
+    .max(200, 'La dirección es demasiado larga.')
+    .regex(SIN_HTML, MENSAJE_SIN_HTML),
   ciudad: z
     .string('Escribe la ciudad.')
     .trim()
     .min(2, 'Escribe la ciudad.')
-    .max(80, 'El nombre de la ciudad es demasiado largo.'),
+    .max(80, 'El nombre de la ciudad es demasiado largo.')
+    .regex(SIN_HTML, MENSAJE_SIN_HTML),
   lat: z.number(MENSAJE_UBICACION).min(-90, MENSAJE_UBICACION).max(90, MENSAJE_UBICACION),
   lng: z.number(MENSAJE_UBICACION).min(-180, MENSAJE_UBICACION).max(180, MENSAJE_UBICACION),
 });

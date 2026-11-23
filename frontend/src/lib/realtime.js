@@ -1,4 +1,5 @@
 import { tokenStore } from './api.js';
+import { urlTiempoReal } from './realtimeUrl.js';
 
 // Cliente WebSocket para tiempo real (alertas, respuestas de emergencia y cambios del mapa).
 // El token no va en la URL: se envía en el primer mensaje y el servidor lo valida
@@ -23,9 +24,10 @@ class RealtimeClient {
       return;
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     try {
-      this.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+      this.ws = new WebSocket(
+        urlTiempoReal({ wsUrl: import.meta.env.VITE_WS_URL, apiUrl: import.meta.env.VITE_API_URL })
+      );
     } catch {
       this.scheduleReconnect();
       return;

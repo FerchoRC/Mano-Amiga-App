@@ -2,11 +2,13 @@ import L from 'leaflet';
 import { useEffect, useRef } from 'react';
 
 import { rumbo } from '../../lib/mapa.js';
-import { crearPin, useLeafletMap } from './leaflet.js';
+import { crearPin, textoSeguro, useLeafletMap } from './leaflet.js';
 import { crearIconoElemento } from './mapIcons.jsx';
 
 const ESTILO_RUTA = { color: '#2E9E5B', weight: 5, opacity: 0.9, lineJoin: 'round' };
 const ESTILO_RUTA_ACTIVA = { weight: 8, opacity: 1 };
+// Ruta que se está trazando (HU-07): discontinua hasta que se guarda.
+const ESTILO_TRAZO = { color: '#2F6FDE', weight: 4, opacity: 0.95, dashArray: '8 8', lineJoin: 'round' };
 
 // Flechas a mitad de cada tramo para indicar hacia dónde evacuar.
 // El triángulo de .ma-route-arrow apunta al este; el rumbo se mide desde el norte.
@@ -46,6 +48,7 @@ export default function EvacuationMap({
   editando = false,
   onMoverPunto,
   onClicMapa,
+  trazo = null,
 }) {
   const containerRef = useRef(null);
   const mapRef = useLeafletMap(containerRef, {
@@ -90,14 +93,14 @@ export default function EvacuationMap({
     const limites = L.latLngBounds([[sede.lat, sede.lng]]);
 
     L.marker([sede.lat, sede.lng], { icon: crearPin(), title: sede.nombre, keyboard: false })
-      .bindTooltip(sede.nombre, { direction: 'top' })
+      .bindTooltip(textoSeguro(sede.nombre), { direction: 'top' })
       .addTo(capa);
 
     for (const ruta of rutas) {
       const trazado = Array.isArray(ruta.trazado) ? ruta.trazado : [];
       if (trazado.length < 2) continue;
       const linea = L.polyline(trazado, ESTILO_RUTA)
-        .bindTooltip(ruta.nombre, { direction: 'top', sticky: true })
+        .bindTooltip(textoSeguro(ruta.nombre), { direction: 'top', sticky: true })
         .on('click', () => onSelectRef.current?.({ ...ruta, clase: 'ruta' }));
       const grupo = L.layerGroup([linea, ...flechasDeRuta(trazado)]);
       elementos.set(ruta.id, { tipo: 'ruta_evacuacion', capa: grupo, linea });
@@ -113,7 +116,7 @@ export default function EvacuationMap({
         draggable: editando,
       })
         .bindTooltip(
-          editando ? `${punto.nombre} (arrastra para reubicar)` : punto.nombre,
+          textoSeguro(editando ? `${punto.nombre} (arrastra para reubicar)` : punto.nombre),
           { direction: 'top' }
         )
         .on('click', () => onSelectRef.current?.({ ...punto, clase: 'punto' }));
@@ -177,6 +180,30 @@ export default function EvacuationMap({
     }
     seleccionadoRef.current = id;
   }, [mapRef, seleccionado]);
+
+  // Ruta en trazado: línea discontinua y un vértice por cada toque, con el inicio marcado.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !trazo) return;
+    const capa = L.layerGroup().addTo(map);
+    if (trazo.length >= 2) L.polyline(trazo, ESTILO_TRAZO).addTo(capa);
+    if (trazo.length >= 2) flechasDeRuta(trazo).forEach((f) => f.addTo(capa));
+    trazo.forEach((coord, i) =>
+      L.circleMarker(coord, {
+        radius: i === 0 ? 7 : 5,
+        color: '#fff',
+        weight: 2,
+        fillColor: i === 0 ? '#16325C' : '#2F6FDE',
+        fillOpacity: 1,
+        interactive: false,
+      }).addTo(capa)
+    );
+    map.getContainer().classList.add('ma-map--trazando');
+    return () => {
+      capa.remove();
+      map.getContainer().classList.remove('ma-map--trazando');
+    };
+  }, [mapRef, trazo]);
 
   // Leaflet necesita recalcular su tamaño si el contenedor cambia (p. ej. al girar el celular).
   useEffect(() => {

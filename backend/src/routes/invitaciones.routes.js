@@ -8,8 +8,13 @@ import { hashToken } from '../lib/tokens.js';
 import { contrasenaSchema, nombreSchema, validateBody } from '../lib/validation.js';
 import { publicLimiter } from '../middleware/rateLimit.js';
 import { createSession, getSessionPayload } from '../services/sessions.js';
+import { registrarConsentimiento } from '../services/consentimiento.js';
 
-const aceptarSchema = z.object({ nombre: nombreSchema, contrasena: contrasenaSchema });
+const aceptarSchema = z.object({
+  nombre: nombreSchema,
+  contrasena: contrasenaSchema,
+  aceptaTratamientoDatos: z.literal(true, 'Debes aceptar la política de tratamiento de datos.'),
+});
 
 // Busca la invitación por su token y falla con un mensaje claro si no sirve.
 async function findInvitacion(db, token, { bloquear = false } = {}) {
@@ -73,6 +78,7 @@ router.post('/:token/aceptar', validateBody(aceptarSchema), async (req, res) => 
       contrasenaHash,
     ]);
     await db.query('DELETE FROM invitacion WHERE id_invitacion = $1', [invitacion.id_invitacion]);
+    await registrarConsentimiento(db, invitacion.id_usuario, req.ip);
 
     const token = await createSession(db, invitacion.id_usuario);
     return { token, payload: await getSessionPayload(db, invitacion.id_usuario) };

@@ -21,7 +21,7 @@
   --surface-muted: #f8f9fb;
   --text: #2b2f36;
   --text-muted: #5b6474;
-  --text-subtle: #8891a1;
+  --text-subtle: #69717f; /* 4,9:1 sobre blanco (WCAG AA) */
   --border: #e3e7ec;
   --border-strong: #cdd3dc;
 

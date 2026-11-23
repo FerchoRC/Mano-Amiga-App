@@ -1,0 +1,593 @@
+/* HU-13: Panel de cumplimiento */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.headerTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  min-width: 0;
+}
+
+.headerCopy {
+  min-width: 0;
+}
+
+.titulo {
+  font-size: clamp(26px, 4vw, 32px);
+  font-weight: 600;
+  color: var(--navy);
+  margin: 0 0 8px;
+}
+
+.headerCopy .muted,
+.subtitulo {
+  max-width: 62ch;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.headerActions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: none;
+}
+
+.headerActions > * {
+  flex: 1 1 0;
+  width: auto;
+}
+
+/* Banner de resumen global */
+.resumenBanner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.resumenPorcentaje {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 128px;
+}
+
+.porcentajeNumero {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--navy);
+}
+
+.porcentajeEtiqueta {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nivelCumplido { color: var(--green-700); }
+.nivelEnProgreso { color: var(--orange-700); }
+.nivelCritico { color: var(--red-700); }
+
+.resumenDetalles {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.resumenTitulo {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.resumenTexto {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.conteoIndicadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.conteoPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pillVerde { background: var(--green-50); color: var(--green-700); }
+.pillAmarillo { background: var(--orange-50); color: var(--orange-700); }
+.pillRojo { background: var(--red-50); color: var(--red-700); }
+
+.resumenProgreso {
+  width: 100%;
+  height: 8px;
+  margin-top: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.resumenRellenoVerde,
+.resumenRellenoAmarillo,
+.resumenRellenoRojo {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.resumenRellenoVerde { background: var(--green); }
+.resumenRellenoAmarillo { background: var(--orange); }
+.resumenRellenoRojo { background: var(--red); }
+
+/* Contenedor de indicadores */
+.gridIndicadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Tarjeta de indicador */
+.card {
+  --tono: var(--text-muted);
+  --tono-50: var(--surface-muted);
+  --tono-700: var(--text-muted);
+  flex: 1 1 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--tono);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.cardVerde,
+.card_verde {
+  --tono: var(--green);
+  --tono-50: var(--green-50);
+  --tono-700: var(--green-700);
+}
+
+.cardAmarillo,
+.card_amarillo {
+  --tono: var(--orange);
+  --tono-50: var(--orange-50);
+  --tono-700: var(--orange-700);
+}
+
+.cardRojo,
+.card_rojo {
+  --tono: var(--red);
+  --tono-50: var(--red-50);
+  --tono-700: var(--red-700);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.iconWrapper {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  background: var(--tono-50);
+  color: var(--tono);
+}
+
+.cardBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cardTitulo {
+  margin: 0;
+  color: var(--navy);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.cardNorma {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.progresoBloque {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.progresoCabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.porcentajeTexto {
+  flex: none;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.cardResumen {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.barraFondo {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.barraRelleno {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tono);
+}
+
+.cardFooter {
+  display: flex;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.btnVerQueFalta {
+  margin-left: auto;
+}
+
+@media (min-width: 960px) {
+  .gridIndicadores { gap: 20px; }
+}
+
+/* Badges de semáforo */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badgeVerde {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+
+.badgeAmarillo {
+  background: var(--orange-50);
+  color: var(--orange-700);
+}
+
+.badgeRojo {
+  background: var(--red-50);
+  color: var(--red-700);
+}
+
+.badgeGris {
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}
+
+/* Diálogo de Detalle */
+.dialogContenido {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.dialogIndicadorHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dialogIconWrapper {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.dialogIconVerde {
+  background: var(--green-50);
+  color: var(--green);
+  border-color: var(--green-50);
+}
+
+.dialogIconAmarillo {
+  background: var(--orange-50);
+  color: var(--orange);
+  border-color: var(--orange-50);
+}
+
+.dialogIconRojo {
+  background: var(--red-50);
+  color: var(--red);
+  border-color: var(--red-50);
+}
+
+.dialogHeaderMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.dialogNorma {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dialogNorma svg {
+  flex: 0 0 14px;
+  margin-top: 3px;
+}
+
+.dialogProgreso {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.dialogRelleno {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--blue);
+}
+
+.barra_verde {
+  background: var(--green);
+}
+
+.barra_amarillo {
+  background: var(--orange);
+}
+
+.barra_rojo {
+  background: var(--red);
+}
+
+.checklistSeccion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checklistTitulo {
+  margin: 0;
+  color: var(--navy);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.checkList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.iconCumple {
+  flex: 0 0 20px;
+  color: var(--green);
+}
+
+.iconPendiente {
+  flex: 0 0 20px;
+  color: var(--orange);
+}
+
+.dialogFooterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+}
+
+.filtroSede {
+  max-width: 360px;
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .headerTop {
+    flex-direction: column;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .headerActions > * {
+    flex: 1 1 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .container {
+    gap: 20px;
+    padding: 20px var(--gutter) 24px;
+  }
+
+  .headerActions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .headerActions > * {
+    flex: 1 1 0;
+    width: auto;
+  }
+
+  .resumenBanner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .resumenPorcentaje {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .porcentajeNumero {
+    font-size: 48px;
+  }
+
+  .porcentajeEtiqueta {
+    margin-top: 0;
+  }
+
+  .gridIndicadores {
+    gap: 16px;
+  }
+
+  .card {
+    flex-basis: 100%;
+    padding: 20px;
+  }
+
+  .progresoCabecera {
+    align-items: flex-end;
+  }
+
+  .dialogIndicadorHeader {
+    align-items: flex-start;
+  }
+
+  .dialogFooterActions {
+    flex-direction: column-reverse;
+  }
+
+  .dialogFooterActions > * {
+    width: 100%;
+  }
+}
+
+.estado {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 420px;
+  margin: 64px auto;
+  padding: 0 var(--gutter);
+  text-align: center;
+  color: var(--text-subtle);
+}
+
+.estadoTitulo {
+  font-size: 22px;
+  color: var(--navy);
+}

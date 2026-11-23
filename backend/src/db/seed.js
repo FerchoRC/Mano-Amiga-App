@@ -2,9 +2,11 @@
 import { pathToFileURL } from 'node:url';
 
 import { pool, withTransaction } from '../config/db.js';
+import { env } from '../config/env.js';
 import { calcularDigitoVerificacion } from '../lib/nit.js';
 import { hashPassword } from '../lib/passwords.js';
 import { limpiarContenido, plantillaPlan } from '../lib/plan.js';
+import { registrarConsentimiento } from '../services/consentimiento.js';
 import { issueInvitation } from '../services/invitations.js';
 import { migrate } from './migrate.js';
 
@@ -81,6 +83,35 @@ const EQUIPOS = {
   ],
 };
 
+// HU-12 y HU-13: Planta tiene su simulacro del año; el de Bodega ya venció (más de 12 meses).
+const SIMULACROS = {
+  'Planta Itagüí': [
+    {
+      fecha: enDias(-45),
+      participantes: 74,
+      tiempoEvacuacion: '4 min 30 s',
+      observaciones: 'La evacuación fue ordenada. La alarma no se escuchó bien en la zona de corte.',
+      planMejora: 'Instalar una sirena adicional en la zona de corte antes del próximo simulacro.',
+    },
+    {
+      fecha: enDias(-410),
+      participantes: 68,
+      tiempoEvacuacion: '6 min',
+      observaciones: 'Congestión en la escalera norte.',
+      planMejora: 'Señalizar la ruta alterna por la escalera sur.',
+    },
+  ],
+  'Bodega Sabaneta': [
+    {
+      fecha: enDias(-400),
+      participantes: 12,
+      tiempoEvacuacion: '2 min 40 s',
+      observaciones: 'Sin novedades.',
+      planMejora: null,
+    },
+  ],
+};
+
 const SEDES = [
   {
     nombre: 'Planta Itagüí',
@@ -110,6 +141,10 @@ const SEDES = [
 ];
 
 async function seed() {
+  // Las cuentas de demostración tienen una contraseña conocida: nunca en producción.
+  if (env.isProduction) {
+    throw new Error('El seed de demostración no se puede correr en producción.');
+  }
   await migrate();
   const hash = await hashPassword(CONTRASENA_DEMO);
 
@@ -138,6 +173,8 @@ async function seed() {
       );
       idAdmin ??= creado.id_usuario;
       idPorCorreo[u.correo] = creado.id_usuario;
+      // Las cuentas demo ya aceptaron la política de datos, como si se hubieran registrado.
+      await registrarConsentimiento(db, creado.id_usuario);
     }
 
     // Tres sedes: una con plan aprobado, otra con plan en borrador y otra sin plan.
@@ -192,6 +229,15 @@ async function seed() {
           `INSERT INTO equipo (id_sede, tipo, nombre, ubicacion, fecha_vencimiento, estado, notas)
            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
           [creada.id_sede, eq.tipo, eq.nombre, eq.ubicacion, eq.fechaVencimiento, eq.estado, eq.notas]
+        );
+      }
+
+      for (const sm of SIMULACROS[sede.nombre] ?? []) {
+        await db.query(
+          `INSERT INTO simulacro
+             (id_sede, id_usuario, fecha, participantes, tiempo_evacuacion, observaciones, plan_mejora)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [creada.id_sede, idAdmin, sm.fecha, sm.participantes, sm.tiempoEvacuacion, sm.observaciones, sm.planMejora]
         );
       }
 
