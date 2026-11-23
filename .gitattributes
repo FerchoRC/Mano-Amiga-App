@@ -1,0 +1,9 @@
+# Todos los archivos de texto se guardan con LF, sin importar el sistema o el editor.
+# Evita diffs de archivo completo y conflictos falsos entre computadores.
+* text=auto eol=lf
+
+*.ttf binary
+*.webp binary
+*.png binary
+*.jpg binary
+*.pdf binary
